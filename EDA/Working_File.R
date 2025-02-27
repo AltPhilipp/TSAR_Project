@@ -11,3 +11,6 @@ library(dplyr)
 # fwrite(myLCdata, file = "Data/myLCdata.csv")
 
 myLCdata <- fread("Data/myLCdata.csv")
+
+dplyr::glimpse(myLCdata)
+str(myLCdata)
