@@ -26,6 +26,7 @@ library(dplyr)
 library(here)
 library(skimr)
 library(ggplot2)
+library(plotly)
 # 
 # LCdata <- fread("Data/LCdata.csv")
 # 
@@ -118,7 +119,7 @@ The following Histogram with density plot, as well as the Q-Q Plot aim to visual
 # Histogram with density plot
 ggplot(myLCdata, aes(x = int_rate)) +
   geom_histogram(aes(y=..density..), bins=30, fill="darkblue", alpha=0.5) +
-  geom_density(color="red", size=1) +
+  geom_density(color="red", linewidth=1) +
   ggtitle("Histogram & Density Plot of int_rate") +
   xlab("Interest Rate") +
   ylab("Density")
@@ -129,7 +130,7 @@ qqnorm(myLCdata$int_rate, main = "Normal Q-Q Plot of int_rate")
 qqline(myLCdata$int_rate, col = "red", lwd = 2)
 ```
 
-Based on the histogram with density plot the int_rate attribute appears to follow close to a normal distribution. Additionally, many the points in the Q-Q plot mostly follow the red line, indicating that the distribution is close to normal. Consequently, the assumption and interpretations made in task 2 seem to be true.
+Based on the histogram with density plot the int_rate attribute appears to almost follow a normal distribution. Additionally, many of the points in the Q-Q plot follow the red line, indicating that the distribution is close to normal. Consequently, the assumption and interpretations made in task 2 seem to be true.
 
 ## Diagrams for `mths_since_last_delinq`
 
@@ -140,8 +141,31 @@ myLCdata %>%
   mutate(missing = ifelse(is.na(mths_since_last_delinq), "Missing", "Present")) %>%
   ggplot(aes(x = missing, fill = missing)) +
   geom_bar() +
-  scale_fill_manual(values = c("Missing" = "red", "Present" = "darkblue")) +  # Custom colors
+  scale_fill_brewer(palette = "Set1") +
   ggtitle("Missing vs. Present Values in mths_since_last_delinq") +
   xlab("Status") +
   ylab("Count")
+```
+
+## Diagrams for `revol_util` 
+
+In the previous task we indicated that there is moderate variability within the attribute. To reveal if the attribute is evenly distributed, indicating that the dataset contains an evenly distributed amount of borrowers with low to high revolving dept utilization, the following boxplot and histogram were created.
+
+```{r}
+# Boxplot for revol_util
+boxplot_revol_util <- ggplot(myLCdata, aes(y = revol_util)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
+  labs(title = "Boxplot of Revolving Credit Utilization",
+       x = "",
+       y = "Revolving Credit Utilization (%)") +
+  theme_minimal()
+
+# Convert to interactive plot
+ggplotly(boxplot_revol_util) 
+
+ggplot(myLCdata, aes(x = revol_util)) +
+  geom_histogram(bins = 50, fill = "steelblue", alpha = 0.7) +
+  ggtitle("Distribution of Revolving Credit Utilization") +
+  xlab("Revolving Credit Utilization (%)") +
+  ylab("Frequency")
 ```
