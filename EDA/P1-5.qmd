@@ -24,6 +24,8 @@ execute:
 library(data.table) 
 library(dplyr)
 library(here)
+library(skimr)
+library(ggplot2)
 # 
 # LCdata <- fread("Data/LCdata.csv")
 # 
@@ -39,3 +41,68 @@ data_path <- file.path(here(), "Data", "myLCdata.csv")
 print(here())
 myLCdata <- fread(data_path)
 ```
+
+# Task 1. Business Understanding
+
+Getting a first impression by using:
+
+-   `glimpes(myLCdata)`
+
+```{r}
+# Usage of glimpes() to get a first overview over our 5 features
+glimpse(myLCdata)
+
+```
+
+-   `str(myLCdata)`
+
+```{r}
+# Usage of str() to get further insights into our dataset
+str(myLCdata)
+```
+
+# Task 2. Data Understanding Based on Summary Statistics
+
+Review of the main statistical metrics of our underlying attributes.
+
+```{r}
+summary(myLCdata)
+skim(myLCdata)
+```
+
+## Interpretation of `int_rate`
+
+The `int_rate` attribute does not show any anomalies. The spread between min and max is relatively tight which indicates a rather symmetrical bell shape that follows a normal distribution. If the distribution is really close to normal, it indicates that most borrowers are categorized into risk levels evenly. Therefore, the dataset does not seam to have a strong bias toward either high or low-risk borrowers.
+
+The following Q-Q PLot aims to visualize the existence of a normal distribution of the attribute int_rate:
+
+```{r}
+# Q-Q Plot
+#| label: fig-Q-Q
+qqnorm(myLCdata$int_rate, main = "Normal Q-Q Plot of int_rate")
+qqline(myLCdata$int_rate, col = "red", lwd = 2)
+```
+
+## Interpretation of `mths_since_last_delinq`
+
+The attribute `mths_since_last_delinq` shows 22816 missing values. However, put in the domain context a missing value likely indicates that the borrower has **never defaulted** rather than it being a data error. In practice, lenders might interpret these missing values as **a positive sign of creditworthiness**.
+
+## Interpretation of `revol_util`
+
+The attribute `revol_util` shows 33 missing values. However, this values is a rather small proportion of the dataset and may not be of significant issue. There is **moderate variability (Standard Deviation: 23.87)**, meaning some borrowers utilize much more or much less of their available credit. The median is very close to the mean, indicating a relatively **balanced** distribution. The min value of 0 suggest that some borrowers do not use any of the resolving credit at all. When analyzing the numbers under the domain knowledge further implication regarding the financial & credit risk of costumers can be derived as followed:
+
+-   **Borrowers with low utilization (\<30%)** are generally seen as **low risk** in credit scoring models, as they manage debt well.
+
+-   **Borrowers with moderate utilization (\~30-70%)** may still be financially stable but are using a significant portion of their available credit.
+
+-   **Borrowers with high utilization (\>70%)** are at **higher risk** since lenders see high credit usage as a potential sign of financial stress.
+
+-   **Utilization \>100%** suggests **over-the-limit borrowing**, which could indicate poor financial management or reporting errors
+
+## Interpretation of `tot_cur_bal`
+
+The standard deviation is quite high, which indicates significant variability in current balance values. This suggests the presence of outliers, likely individuals with exceptionally high balances, skewing the distribution.
+
+## Interpretation of `delinq_2yrs`
+
+If a large proportion of values are **zero**, since the median and 1st to 3rd quertile are 0. Additionally, the mean is close to zero, indicating that few borrowers have had delinquencies of plus 30 days in the past two years, which may impact predictive models if not handled properly. It is questionable if this bias does reflect real-world. This bias might lead to bad generalizability since the model might fail to detect risky customers. On the other hand, given the domain context, the data might suggest that delinquency of borrowers is often below 30 day, meaning that outstanding payments are redeemed promptly.
