@@ -74,15 +74,6 @@ skim(myLCdata)
 
 The `int_rate` attribute does not show any anomalies. The spread between min and max is relatively tight which indicates a rather symmetrical bell shape that follows a normal distribution. If the distribution is really close to normal, it indicates that most borrowers are categorized into risk levels evenly. Therefore, the dataset does not seam to have a strong bias toward either high or low-risk borrowers.
 
-The following Q-Q PLot aims to visualize the existence of a normal distribution of the attribute int_rate:
-
-```{r}
-# Q-Q Plot
-#| label: fig-Q-Q
-qqnorm(myLCdata$int_rate, main = "Normal Q-Q Plot of int_rate")
-qqline(myLCdata$int_rate, col = "red", lwd = 2)
-```
-
 ## Interpretation of `mths_since_last_delinq`
 
 The attribute `mths_since_last_delinq` shows 22816 missing values. However, put in the domain context a missing value likely indicates that the borrower has **never defaulted** rather than it being a data error. In practice, lenders might interpret these missing values as **a positive sign of creditworthiness**.
@@ -106,3 +97,51 @@ The standard deviation is quite high, which indicates significant variability in
 ## Interpretation of `delinq_2yrs`
 
 If a large proportion of values are **zero**, since the median and 1st to 3rd quertile are 0. Additionally, the mean is close to zero, indicating that few borrowers have had delinquencies of plus 30 days in the past two years, which may impact predictive models if not handled properly. It is questionable if this bias does reflect real-world. This bias might lead to bad generalizability since the model might fail to detect risky customers. On the other hand, given the domain context, the data might suggest that delinquency of borrowers is often below 30 day, meaning that outstanding payments are redeemed promptly.
+
+# Task 3. Univariate Exploratory Data Analysis (EDA) with ggplot2
+
+Our underlying dataset contains the following data types:
+
+```{r}
+cat(paste(names(myLCdata), "➡️", sapply(myLCdata, class)), sep = "\n")
+```
+
+Based on the respective data type of each attribute, the following diagram types were chosen.
+
+## Diagrams for `int_rate`
+
+In task 2 we claimed that the int_rate attribute tends to show a normal distribution. Let's now use some suitable graphs to investigate and proof this claim.
+
+The following Histogram with density plot, as well as the Q-Q Plot aim to visualize the existence of a normal distribution of the attribute int_rate:
+
+```{r}
+# Histogram with density plot
+ggplot(myLCdata, aes(x = int_rate)) +
+  geom_histogram(aes(y=..density..), bins=30, fill="darkblue", alpha=0.5) +
+  geom_density(color="red", size=1) +
+  ggtitle("Histogram & Density Plot of int_rate") +
+  xlab("Interest Rate") +
+  ylab("Density")
+
+# Q-Q Plot
+#| label: fig-Q-Q
+qqnorm(myLCdata$int_rate, main = "Normal Q-Q Plot of int_rate")
+qqline(myLCdata$int_rate, col = "red", lwd = 2)
+```
+
+Based on the histogram with density plot the int_rate attribute appears to follow close to a normal distribution. Additionally, many the points in the Q-Q plot mostly follow the red line, indicating that the distribution is close to normal. Consequently, the assumption and interpretations made in task 2 seem to be true.
+
+## Diagrams for `mths_since_last_delinq`
+
+In task 2 we mentioned the absence of 22816 values. Nonetheless, as stated in task 2 and under the aspect of the domain context, those values can be interpreted **as a positive sign of creditworthiness.** The following bar chart aims to visualize this behavior:
+
+```{r}
+myLCdata %>%
+  mutate(missing = ifelse(is.na(mths_since_last_delinq), "Missing", "Present")) %>%
+  ggplot(aes(x = missing, fill = missing)) +
+  geom_bar() +
+  scale_fill_manual(values = c("Missing" = "red", "Present" = "darkblue")) +  # Custom colors
+  ggtitle("Missing vs. Present Values in mths_since_last_delinq") +
+  xlab("Status") +
+  ylab("Count")
+```
