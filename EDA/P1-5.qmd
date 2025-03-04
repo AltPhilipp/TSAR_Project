@@ -3,6 +3,7 @@ title: "TSAR Project Assignment Part1"
 subtitle: "Exploratory Data Analysis with ggplot2"
 author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
 date : today
+#warning: false
 format:
   html:
     theme: zephyr
@@ -21,7 +22,7 @@ execute:
 
 # if (!require("data.table")) install.packages("data.table") if (!require("dplyr")) install.packages("dplyr") \
 # load them 
-library(data.table) 
+library(data.table)
 library(dplyr)
 library(here)
 library(skimr)
@@ -93,7 +94,7 @@ The attribute `revol_util` shows 33 missing values. However, this values is a ra
 
 ## Interpretation of `tot_cur_bal`
 
-The standard deviation is quite high, which indicates significant variability in current balance values. This suggests the presence of outliers, likely individuals with exceptionally high balances, skewing the distribution.
+The standard deviation is quite high, which indicates significant variability in current balance values. This suggests the presence of outliers, likely individuals with exceptionally high balances, skewing the distribution. Moreover, there are 3558 missing values, indicating that there might be actual missing data.
 
 ## Interpretation of `delinq_2yrs`
 
@@ -118,7 +119,7 @@ The following Histogram with density plot, as well as the Q-Q Plot aim to visual
 ```{r}
 # Histogram with density plot
 ggplot(myLCdata, aes(x = int_rate)) +
-  geom_histogram(aes(y=..density..), bins=30, fill="darkblue", alpha=0.5) +
+  geom_histogram(aes(y= after_stat(density)), bins=30, fill="darkblue", alpha=0.5) +
   geom_density(color="red", linewidth=1) +
   ggtitle("Histogram & Density Plot of int_rate") +
   xlab("Interest Rate") +
@@ -147,7 +148,7 @@ myLCdata %>%
   ylab("Count")
 ```
 
-## Diagrams for `revol_util` 
+## Diagrams for `revol_util`
 
 In the previous task we indicated that there is moderate variability within the attribute. To reveal if the attribute is evenly distributed, indicating that the dataset contains an evenly distributed amount of borrowers with low to high revolving dept utilization, the following boxplot and histogram were created.
 
@@ -169,3 +170,40 @@ ggplot(myLCdata, aes(x = revol_util)) +
   xlab("Revolving Credit Utilization (%)") +
   ylab("Frequency")
 ```
+
+The variability in `revol_util` appears **moderate**, with most values concentrated around the mean but a few significant outliers above 100% utilization.
+
+## Diagrams for `tot_cur_bal`
+
+The boxplot shows a **wide spread of values**, with a significant number of **outliers**. This could indicate high-net-worth borrowers or individuals with large outstanding credits. Additionally, the presence of outliers suggests that the data is **highly variable**, meaning some borrowers carry significantly larger balances than others. In the context of credit risk, higher total current balance could therefore mean higher debt level, which could correlate with financial stress.
+
+```{r}
+# Boxplot for tot_cur_bal
+boxplot_tot_cur_bal <- ggplot(myLCdata, aes(y = tot_cur_bal)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
+  labs(title = "Boxplot of the current balance",
+       x = "",
+       y = "Current Balance") +
+  theme_minimal()
+# Convert to interactive plot
+ggplotly(boxplot_tot_cur_bal)
+```
+
+## Diagrams for `delinq_2yrs` 
+
+The following histogram shows a sharp **peak at zero** confirming that most borrowers have not had delinquencies longer than 30 days within the last two years. This undermines the previously expressed **data bias,** as the imbalance suggest that a predictive model might struggle to generalize to riskier customers.
+
+```{r}
+
+test <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
+  geom_histogram(bins = 10, fill = "steelblue", alpha = 0.5) +
+  ggtitle("Histogram of Delinquencies (30+ Days Past Due)") +
+  xlab("Number of Delinquencies (Past 2 Years)") +
+  ylab("Frequency") +
+  theme_minimal()
+
+ggplotly(test)
+
+```
+
+# Task 4. Bivariate EDA with ggplot2 
