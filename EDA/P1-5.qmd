@@ -28,6 +28,7 @@ library(here)
 library(skimr)
 library(ggplot2)
 library(plotly)
+library(GGally)
 # 
 # LCdata <- fread("Data/LCdata.csv")
 # 
@@ -206,4 +207,36 @@ ggplotly(test)
 
 ```
 
-# Task 4. Bivariate EDA with ggplot2 
+# Task 4. Bivariate EDA with ggplot2
+
+Using ggpairs to visualize the relationship between all attributes in the dataset.
+```{r}
+ggpairs(myLCdata)
+```
+##Next we selected the following two types of 2-dimensional subplots that ggpairs() is showing us.
+
+First, we selected the scatter plot of 'int_rate' and 'revol_util' to visualize the relationship between the interest rate and the revolving credit utilization. The scatter plot shows a **positive correlation** between the two attributes, indicating that borrowers with higher credit utilization tend to have higher interest rates. This makes sense, as higher credit utilization is often associated with higher risk and therefore higher interest rates.
+```{r}
+library(ggplot2)
+library(viridis)
+
+ggplot(myLCdata, aes(x = revol_util, y = int_rate)) +
+  geom_point(alpha = 0.5, color = "#1f78b4", size = 2) +  # Points first
+  geom_smooth(method = "gam", formula = y ~ s(x, bs = "cs"), se = TRUE, color = "black", linewidth = 1.5) +  # Thick, black trend line
+  labs(
+    title = "Interest Rate vs. Revolving Credit Utilization",
+    subtitle = "Higher credit utilization may lead to higher interest rates.",
+    x = "Revolving Utilization (%)",
+    y = "Interest Rate (%)"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.major = element_line(color = "grey80"),
+    panel.grid.minor = element_blank()
+  )
+
+```
+Next we chose...
+```{r}
+
+```
