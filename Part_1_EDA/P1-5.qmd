@@ -11,6 +11,8 @@ format:
     page-layout: full
 #format: pdf #Needs tinytex or similar
 editor: visual #Visual editor by default
+  markdown: 
+    wrap: 72
 execute:
   echo: true  # Show code in output by default. If false no code only output.
 ---
@@ -74,13 +76,8 @@ str(myLCdata)
 ```
 
 ## Understanding our Sampled Features
-Most our sampled features of the data set are self-explanatory when consulting
-the data dictionary. However, at first, the feature `revol_util` can be somewhat
-challenging to interpret. It represents the percentage of available revolving 
-credit a borrower is using, such as on a credit card. 
-A higher value means more credit is being utilized, while a lower value 
-indicates more available credit. Furthermore, using the sampling technique 
-described above, `myLCdata' contains only numerical attributes.
+
+Most our sampled features of the data set are self-explanatory when consulting the data dictionary. However, at first, the feature `revol_util` can be somewhat challenging to interpret. It represents the percentage of available revolving credit a borrower is using, such as on a credit card. A higher value means more credit is being utilized, while a lower value indicates more available credit. Furthermore, using the sampling technique described above, \`myLCdata' contains only numerical attributes.
 
 # Task 2. Data Understanding Based on Summary Statistics
 
@@ -103,27 +100,26 @@ The skewness of `mths_since_last_delinq` indicates a slight **right-skewed** dis
 
 ## Interpretation of `revol_util`
 
-The attribute `revol_util` shows 33 missing values, which is a relatively small proportion of the dataset and may not be a significant issue. There is **moderate variability (Standard Deviation: 23.87)**, meaning some borrowers utilize much more or much less of their available credit. The median is very close to the mean, indicating a relatively **balanced** distribution. The minimum value of 0 suggests that some borrowers do not use any revolving credit at all.
+The attribute `revol_util` shows 33 missing values, which is a relatively small proportion of the dataset and may not be a significant issue. There is **moderate variability (Standard Deviation: 23.87)**, meaning some borrowers utilize much more or much less of their available credit. The median is very close to the mean, indicating a relatively **balanced** distribution. The minimum value of 0 suggests that some borrowers do not use any revolving credit at all. Additionally, the maximum **value (148.00)** compared to the 75th percentile (73.90) suggests **potential outliers**, which could influence variability interpretation and measures.
 
 From a financial risk perspective:
 
--   **Borrowers with low utilization (<30%)** are generally seen as **low risk** in credit scoring models, as they manage debt well.
--   **Borrowers with moderate utilization (~30-70%)** may still be financially stable but use a significant portion of their available credit.
--   **Borrowers with high utilization (>70%)** are at **higher risk**, as lenders see high credit usage as a potential sign of financial stress.
--   **Utilization >100%** suggests **over-the-limit borrowing**, which could indicate poor financial management or reporting errors.
+-   **Borrowers with low utilization (\<30%)** are generally seen as **low risk** in credit scoring models, as they manage debt well.
+-   **Borrowers with moderate utilization (\~30-70%)** may still be financially stable but use a significant portion of their available credit.
+-   **Borrowers with high utilization (\>70%)** are at **higher risk**, as lenders see high credit usage as a potential sign of financial stress.
+-   **Utilization \>100%** suggests **over-the-limit borrowing**, which could indicate poor financial management or reporting errors.
 
 ## Interpretation of `tot_cur_bal`
 
-The standard deviation is quite high, which indicates significant variability in current balance values. This strongly suggests the presence of outliers, likely individuals with exceptionally high balances, skewing the distribution. Moreover, there are 3558 missing values, indicating potential missing data.
+The standard deviation is quite high (`157,273.25`), indicating substantial variability in current balance values. This strongly suggests the presence of **outliers**, which might be individuals with exceptionally high balances, who are skewing the distribution. Furthermore, there are **3,558 missing values (8% of the data).** If the dataset was intended wo be further processesd, imputation or exclusion might be required depending on the analytical approach.
 
-The distribution of `tot_cur_bal` is **highly skewed** to the right. There are almost **1400 outliers**, primarily **high-balance borrowers**, which could impact predictive modeling if not addressed.
+The distribution of `tot_cur_bal` is **highly skewed to the right**, which can be seen by the large discrepancy between the mean (`139,427.49`) and median (`78,813.00`). Additionally, when applying the IQR-Rule, there are **approximately 1,400 outliers**, primarily high-balance borrowers, which could impact predictive modeling if not properly addressed through transformations.
 
 ## Interpretation of `delinq_2yrs`
 
-A large proportion of values are **zero**, as the median and interquartile range all indicate no delinquencies. The mean is also close to zero, suggesting that most borrowers have had **no** delinquencies in the past two years. However, this could introduce bias in predictive models if not handled properly, potentially reducing generalizability.
+A large proportion of values are **zero**, as the median and interquartile range all indicate no delinquencies. The mean is also close to zero, suggesting that most borrowers have had **no** 30+ days past-due incidences of delinquency in the past two years. However, the presence of a high number of "solid" borrowers could potentially introduce biases in predictive models if not handled properly, potentially reducing generalizability.
 
 The dataset reveals over **8000 outliers** for `delinq_2yrs`. Given the quartile values, most of these outliers are likely **borrowers with exactly 1 delinquency**, which is a key insight. The presence of only a few cases with higher values suggests that **delinquencies of more than 1 occurrence are rare** in this dataset.
-
 
 # Task 3. Univariate Exploratory Data Analysis (EDA) with ggplot2
 
@@ -219,7 +215,7 @@ The variability in `revol_util` appears **moderate**, with most values concentra
 
 The boxplot shows a **wide spread of values**, with a significant number of **outliers**. This could indicate high-net-worth borrowers or individuals with large outstanding credits. Additionally, the presence of outliers suggests that the data is **highly variable**, meaning some borrowers carry significantly larger balances than others. In the context of credit risk, higher total current balance could therefore mean higher debt level, which could correlate with financial stress.
 
-```{r plots tot_cur_bal}
+```{r plots tot_cur_bal, warning=FALSE}
 # Boxplot for tot_cur_bal
 boxplot_tot_cur_bal <- ggplot(myLCdata, aes(y = tot_cur_bal)) +
   geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
@@ -235,9 +231,9 @@ ggplotly(boxplot_tot_cur_bal)
 
 The following histogram shows a sharp **peak at zero** confirming that most borrowers have not had delinquencies longer than 30 days within the last two years. This undermines the previously expressed **data bias,** as the imbalance suggest that a predictive model might struggle to generalize to riskier customers.
 
-```{r plots delinq_2yrs}
+```{r plots delinq_2yrs, warning=FALSE}
 hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
-  geom_histogram(bins = 10, fill = "steelblue", alpha = 0.5) +
+  geom_histogram(bins = 20, fill = "steelblue", alpha = 0.5) +
   ggtitle("Histogram of Delinquencies (30+ Days Past Due)") +
   xlab("Number of Delinquencies (Past 2 Years)") +
   ylab("Frequency") +
@@ -249,6 +245,7 @@ ggplotly(hist_delinq_2yrs)
 # Task 4. Bivariate EDA with ggplot2
 
 ## Create Pairs Plot
+
 Using ggpairs to visualize the relationship between all attributes in the data set.
 
 ```{r ggpairs, warning=FALSE}
@@ -258,12 +255,15 @@ ggpairs(myLCdata)
 ```
 
 ## Analyzing Insightful Subplots
+
 Next we selected the following two types of 2-dimensional subplots that ggpairs() is showing us.
 
 ### Interest Rate `int_rate` vs. Revolving Credit Utilization `revol_util`
+
 One notable relationship is between interest rate `int_rate` and revolving credit utilization `revol_util`, which shows a moderate **positive correlation of 0.271**. This suggests that borrowers who utilize a larger portion of their available credit tend to be charged higher interest rates. Lenders may perceive high credit utilization as a sign of greater financial dependency, increasing the risk associated with the borrower and justifying higher loan costs.
 
 ### Months Since Last Delinquency `mths_since_last_delinq` vs. Number of Delinquencies in Past 2 Years `delinq_2yrs`
+
 Another significant finding is the **negative correlation (-0.561)** between `mths_since_last_delinq` and `delinq_2yrs`. This indicates that borrowers with more recent delinquencies tend to have a higher number of past delinquencies within the last two years. The pattern suggests that borrowers who have defaulted recently are more likely to have a history of repeated delinquencies, reinforcing their classification as high-risk individuals
 
 **More if necessary!!**
@@ -271,6 +271,7 @@ Another significant finding is the **negative correlation (-0.561)** between `mt
 ## Standalone Plotting of Subplots
 
 ### Scatterplot with Regression Line (`revol_util` vs. `int_rate`)
+
 ```{r scatter revol_util vs. int_rate, warning=FALSE}
 # Scatterplot: Interest Rate vs. Revolving Credit Utilization
 ggplot(myLCdata, aes(x = revol_util, y = int_rate)) +
@@ -309,7 +310,3 @@ ggplot(myLCdata, aes(x = revol_util, y = int_rate, color = revol_util)) +
   ylab("Interest Rate (%)") +
   theme_minimal()
 ```
-
-
-
-
