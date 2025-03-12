@@ -1,0 +1,315 @@
+---
+title: "TSAR Project Assignment Part1"
+subtitle: "Exploratory Data Analysis with ggplot2"
+author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
+date : today
+#warning: false
+format:
+  html:
+    theme: zephyr
+    code-fold: true
+    page-layout: full
+#format: pdf #Needs tinytex or similar
+editor: visual #Visual editor by default
+execute:
+  echo: true  # Show code in output by default. If false no code only output.
+---
+
+```{r setup, include=FALSE}
+# install the required packages if needed
+# need to be commented because myLCdata file must not always be created again
+# use only myLCdata <- fread("Data/myLCdata.csv")
+
+# install the required packages if needed
+if (!require("data.table")) install.packages("data.table")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("here")) install.packages("here")
+if (!require("skimr")) install.packages("skimr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("plotly")) install.packages("plotly")
+if (!require("GGally")) install.packages("GGally")
+
+# load them 
+library(data.table)
+library(dplyr)
+library(here)
+library(skimr)
+library(ggplot2)
+library(plotly)
+library(GGally)
+
+# Important: Set WD to Part_1_EDA
+# TSAR-ID: 5
+
+# LCdata <- fread("Data/LCdata.csv")
+# set.seed(5)
+# myLCdata <- LCdata %>% sample(5) %>% slice_sample(prop = .5)
+# fwrite(myLCdata, file = "Data/myLCdata.csv")
+
+myLCdata <- fread("Data/myLCdata.csv")
+```
+
+```{r include=FALSE}
+# data_path <- file.path(here(), "Data", "myLCdata.csv")
+# print(here())
+# myLCdata <- fread(data_path)
+```
+
+# Task 1. Business Understanding
+
+Using `dplyr::glimpse()` and `str()` to get a first impression of the data set.
+
+## `dplyr glimpse()`
+
+```{r glimpse()}
+# Usage of glimpes() to get a first overview over our 5 features
+dplyr::glimpse(myLCdata)
+```
+
+## `str()`
+
+```{r str()}
+# Usage of str() to get further insights into our dataset
+str(myLCdata)
+```
+
+## Understanding our Sampled Features
+Most our sampled features of the data set are self-explanatory when consulting
+the data dictionary. However, at first, the feature `revol_util` can be somewhat
+challenging to interpret. It represents the percentage of available revolving 
+credit a borrower is using, such as on a credit card. 
+A higher value means more credit is being utilized, while a lower value 
+indicates more available credit. Furthermore, using the sampling technique 
+described above, `myLCdata' contains only numerical attributes.
+
+# Task 2. Data Understanding Based on Summary Statistics
+
+Using summary() and skimr::skim() to review the main statistical metrics of our attributes.
+
+```{r summary()/skimr::skim()}
+summary(myLCdata)
+skimr::skim(myLCdata)
+```
+
+## Interpretation of `int_rate`
+
+The `int_rate` attribute does not show any anomalies. The spread between min and max is relatively tight, indicating a rather symmetrical bell shape that follows a normal distribution. If the distribution is close to normal, it suggests that most borrowers are categorized into risk levels evenly. Therefore, the dataset does not seem to have a strong bias toward either high or low-risk borrowers.
+
+## Interpretation of `mths_since_last_delinq`
+
+The attribute `mths_since_last_delinq` shows 22816 missing values. However, in the domain context, a missing value likely indicates that the borrower has **never defaulted** rather than it being a data error. In practice, lenders might interpret these missing values as **a positive sign of creditworthiness**.
+
+The skewness of `mths_since_last_delinq` indicates a slight **right-skewed** distribution. This means that while most borrowers have relatively recent delinquencies, there are a few with long durations since their last delinquency.
+
+## Interpretation of `revol_util`
+
+The attribute `revol_util` shows 33 missing values, which is a relatively small proportion of the dataset and may not be a significant issue. There is **moderate variability (Standard Deviation: 23.87)**, meaning some borrowers utilize much more or much less of their available credit. The median is very close to the mean, indicating a relatively **balanced** distribution. The minimum value of 0 suggests that some borrowers do not use any revolving credit at all.
+
+From a financial risk perspective:
+
+-   **Borrowers with low utilization (<30%)** are generally seen as **low risk** in credit scoring models, as they manage debt well.
+-   **Borrowers with moderate utilization (~30-70%)** may still be financially stable but use a significant portion of their available credit.
+-   **Borrowers with high utilization (>70%)** are at **higher risk**, as lenders see high credit usage as a potential sign of financial stress.
+-   **Utilization >100%** suggests **over-the-limit borrowing**, which could indicate poor financial management or reporting errors.
+
+## Interpretation of `tot_cur_bal`
+
+The standard deviation is quite high, which indicates significant variability in current balance values. This strongly suggests the presence of outliers, likely individuals with exceptionally high balances, skewing the distribution. Moreover, there are 3558 missing values, indicating potential missing data.
+
+The distribution of `tot_cur_bal` is **highly skewed** to the right. There are almost **1400 outliers**, primarily **high-balance borrowers**, which could impact predictive modeling if not addressed.
+
+## Interpretation of `delinq_2yrs`
+
+A large proportion of values are **zero**, as the median and interquartile range all indicate no delinquencies. The mean is also close to zero, suggesting that most borrowers have had **no** delinquencies in the past two years. However, this could introduce bias in predictive models if not handled properly, potentially reducing generalizability.
+
+The dataset reveals over **8000 outliers** for `delinq_2yrs`. Given the quartile values, most of these outliers are likely **borrowers with exactly 1 delinquency**, which is a key insight. The presence of only a few cases with higher values suggests that **delinquencies of more than 1 occurrence are rare** in this dataset.
+
+
+# Task 3. Univariate Exploratory Data Analysis (EDA) with ggplot2
+
+Our underlying data set contains the following data types:
+
+```{r data types}
+cat(paste(names(myLCdata), "➡️", sapply(myLCdata, class)), sep = "\n")
+```
+
+Based on the respective data type of each attribute, the following diagram types were chosen.
+
+## Diagrams for `int_rate`
+
+In task 2 we claimed that the int_rate attribute tends to show a normal distribution. Let's now use some suitable graphs to investigate and proof this claim.
+
+The following Histogram with a density plot and the theoretical normal density function (orange dashed line), as well as the Q-Q Plot (used to compare the feature's distribution) aim to visualize the existence of a normal distribution of the attribute int_rate:
+
+```{r plots int_rate}
+# Calculate mean and standard deviation of int_rate
+mean_int_rate <- mean(myLCdata$int_rate, na.rm = TRUE)
+sd_int_rate <- sd(myLCdata$int_rate, na.rm = TRUE)
+
+# Histogram with density plot and normal curve
+ggplot(myLCdata, aes(x = int_rate)) +
+  geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "steelblue", alpha = 0.5) +
+  geom_density(color = "red", linewidth = 1) +  # Empirical density curve
+  stat_function(fun = dnorm, args = list(mean = mean_int_rate, sd = sd_int_rate), 
+                color = "orange", linewidth = 1.2, linetype = "dashed") +  # Normal curve
+  ggtitle("Histogram & Density Plot of int_rate with Normal Curve") +
+  xlab("Interest Rate") +
+  ylab("Density") +
+  theme_minimal()
+
+# Q-Q Plot
+#| label: fig-Q-Q
+qqnorm(myLCdata$int_rate, main = "Normal Q-Q Plot of int_rate", pch = 16, col = "steelblue")
+qqline(myLCdata$int_rate, col = "red", lwd = 2)
+```
+
+Based on the histogram with the density plot, the int_rate attribute shows a roughly bell-shaped distribution but exhibits slight right skewness. While many points in the Q-Q plot follow the red line, deviations at the tails suggest that the distribution is not perfectly normal. However, the assumption of approximate normality made in Task 2 still holds reasonably well for most of the data, with some caution needed for outliers.
+
+## Diagrams for `mths_since_last_delinq`
+
+In Task 2, we mentioned the absence of 22,816 values. Nonetheless, as stated in Task 2 and under the aspect of the domain context, those values can be interpreted as a **positive sign of creditworthiness**. The following bar chart visualizes this missing vs. present ratio. Additionally, the boxplot illustrates the **distribution of `mths_since_last_delinq`**, considering **only the present (non-missing) values** to focus on the actual reported delinquencies.
+
+```{r plots mths_since_last_delinq}
+# Bar chart for missing vs. present values
+myLCdata %>%
+  mutate(missing = ifelse(is.na(mths_since_last_delinq), "Missing", "Present")) %>%
+  ggplot(aes(x = missing, fill = missing)) +
+  geom_bar() +
+  scale_fill_brewer(palette = "Set1") +
+  ggtitle("Missing vs. Present Values in mths_since_last_delinq") +
+  xlab("Status") +
+  ylab("Count")
+
+# Boxplot for only present values
+ggplot(myLCdata %>% filter(!is.na(mths_since_last_delinq)), aes(y = mths_since_last_delinq)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +
+  ggtitle("Boxplot of mths_since_last_delinq (Only Present Values)") +
+  ylab("Months Since Last Delinquency") +
+  theme_minimal()
+
+
+```
+
+## Diagrams for `revol_util`
+
+In the previous task we indicated that there is moderate variability within the attribute. To reveal if the attribute is evenly distributed, indicating that the dataset contains an evenly distributed amount of borrowers with low to high revolving dept utilization, the following boxplot and histogram were created. Note: This will produce a warning for 33 observations, which correspond to the missing values described above.
+
+```{r plots revol_util}
+# Boxplot for revol_util
+boxplot_revol_util <- ggplot(myLCdata, aes(y = revol_util)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
+  labs(title = "Boxplot of Revolving Credit Utilization",
+       x = "",
+       y = "Revolving Credit Utilization (%)") +
+  theme_minimal()
+
+# Convert to interactive plot
+ggplotly(boxplot_revol_util) 
+
+ggplot(myLCdata, aes(x = revol_util)) +
+  geom_histogram(bins = 50, fill = "steelblue", alpha = 0.7) +
+  ggtitle("Distribution of Revolving Credit Utilization") +
+  xlab("Revolving Credit Utilization (%)") +
+  ylab("Frequency")
+```
+
+The variability in `revol_util` appears **moderate**, with most values concentrated around the mean but a few significant outliers above 100% utilization.
+
+## Diagrams for `tot_cur_bal`
+
+The boxplot shows a **wide spread of values**, with a significant number of **outliers**. This could indicate high-net-worth borrowers or individuals with large outstanding credits. Additionally, the presence of outliers suggests that the data is **highly variable**, meaning some borrowers carry significantly larger balances than others. In the context of credit risk, higher total current balance could therefore mean higher debt level, which could correlate with financial stress.
+
+```{r plots tot_cur_bal}
+# Boxplot for tot_cur_bal
+boxplot_tot_cur_bal <- ggplot(myLCdata, aes(y = tot_cur_bal)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
+  labs(title = "Boxplot of the current balance",
+       x = "",
+       y = "Current Balance") +
+  theme_minimal()
+# Convert to interactive plot
+ggplotly(boxplot_tot_cur_bal)
+```
+
+## Diagrams for `delinq_2yrs`
+
+The following histogram shows a sharp **peak at zero** confirming that most borrowers have not had delinquencies longer than 30 days within the last two years. This undermines the previously expressed **data bias,** as the imbalance suggest that a predictive model might struggle to generalize to riskier customers.
+
+```{r plots delinq_2yrs}
+hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
+  geom_histogram(bins = 10, fill = "steelblue", alpha = 0.5) +
+  ggtitle("Histogram of Delinquencies (30+ Days Past Due)") +
+  xlab("Number of Delinquencies (Past 2 Years)") +
+  ylab("Frequency") +
+  theme_minimal()
+
+ggplotly(hist_delinq_2yrs)
+```
+
+# Task 4. Bivariate EDA with ggplot2
+
+## Create Pairs Plot
+Using ggpairs to visualize the relationship between all attributes in the data set.
+
+```{r ggpairs, warning=FALSE}
+# warning=FALSE --> suppress warnings in rendered version
+ggpairs(myLCdata)
+
+```
+
+## Analyzing Insightful Subplots
+Next we selected the following two types of 2-dimensional subplots that ggpairs() is showing us.
+
+### Interest Rate `int_rate` vs. Revolving Credit Utilization `revol_util`
+One notable relationship is between interest rate `int_rate` and revolving credit utilization `revol_util`, which shows a moderate **positive correlation of 0.271**. This suggests that borrowers who utilize a larger portion of their available credit tend to be charged higher interest rates. Lenders may perceive high credit utilization as a sign of greater financial dependency, increasing the risk associated with the borrower and justifying higher loan costs.
+
+### Months Since Last Delinquency `mths_since_last_delinq` vs. Number of Delinquencies in Past 2 Years `delinq_2yrs`
+Another significant finding is the **negative correlation (-0.561)** between `mths_since_last_delinq` and `delinq_2yrs`. This indicates that borrowers with more recent delinquencies tend to have a higher number of past delinquencies within the last two years. The pattern suggests that borrowers who have defaulted recently are more likely to have a history of repeated delinquencies, reinforcing their classification as high-risk individuals
+
+**More if necessary!!**
+
+## Standalone Plotting of Subplots
+
+### Scatterplot with Regression Line (`revol_util` vs. `int_rate`)
+```{r scatter revol_util vs. int_rate, warning=FALSE}
+# Scatterplot: Interest Rate vs. Revolving Credit Utilization
+ggplot(myLCdata, aes(x = revol_util, y = int_rate)) +
+  geom_point(alpha = 0.4, color = "steelblue") +  # Scatter points
+  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line
+  ggtitle("Interest Rate vs. Revolving Credit Utilization") +
+  xlab("Revolving Credit Utilization (%)") +
+  ylab("Interest Rate (%)") +
+  theme_minimal()
+```
+
+### Scatterplot with Regression Line (`mths_since_last_delinq` vs. `delinq_2yrs`)
+
+```{r scatter mths_since_last_delinq vs. delinq_2yrs, warning=FALSE}
+ggplot(myLCdata, aes(x = mths_since_last_delinq, y = delinq_2yrs)) +
+  geom_point(alpha = 0.4, color = "steelblue") +  
+  geom_smooth(method = "loess", color = "red", se = TRUE) +  
+  ggtitle("Months Since Last Delinquency vs. Delinquencies in the Past 2 Years") +
+  xlab("Months Since Last Delinquency") +
+  ylab("Number of Delinquencies (Past 2 Years)") +
+  theme_minimal()
+```
+
+## Enhanced Scatterplot using Loan Amount as a Third Variable
+
+**Describe!!**
+
+```{r scatter third variable, warning=FALSE}
+# Enhanced Scatterplot: Adding Total Current Balance as a Third Variable
+ggplot(myLCdata, aes(x = revol_util, y = int_rate, color = revol_util)) +
+  geom_point(alpha = 0.6) +  # Scatter points with total balance as color
+  geom_smooth(method = "lm", color = "black", se = TRUE) +  # Regression line
+  scale_color_gradient(low = "blue", high = "red") +  # Color scale for tot_cur_bal
+  ggtitle("Interest Rate vs. Revolving Credit Utilization (Total Balance Highlighted)") +
+  xlab("Revolving Credit Utilization (%)") +
+  ylab("Interest Rate (%)") +
+  theme_minimal()
+```
+
+
+
+
