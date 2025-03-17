@@ -11,8 +11,6 @@ format:
     page-layout: full
 #format: pdf #Needs tinytex or similar
 editor: visual #Visual editor by default
-# markdown:
-#   wrap: 72
 execute:
   echo: true  # Show code in output by default. If false no code only output.
 ---
@@ -153,14 +151,14 @@ ggplot(myLCdata, aes(x = int_rate)) +
   geom_density(color = "red", linewidth = 1) +  # Empirical density curve
   stat_function(fun = dnorm, args = list(mean = mean_int_rate, sd = sd_int_rate), 
                 color = "orange", linewidth = 1.2, linetype = "dashed") +  # Normal curve
-  ggtitle("Histogram & Density Plot of int_rate with Normal Curve") +
+  ggtitle("Figure 1: Histogram & Density Plot of int_rate with Normal Curve") +
   xlab("Interest Rate") +
   ylab("Density") +
   theme_minimal()
 
 # Q-Q Plot
 #| label: fig-Q-Q
-qqnorm(myLCdata$int_rate, main = "Normal Q-Q Plot of int_rate", pch = 16, col = "steelblue")
+qqnorm(myLCdata$int_rate, main = "Figure 2: Normal Q-Q Plot of int_rate", pch = 16, col = "steelblue")
 qqline(myLCdata$int_rate, col = "red", lwd = 2)
 ```
 
@@ -177,14 +175,14 @@ myLCdata %>%
   ggplot(aes(x = missing, fill = missing)) +
   geom_bar() +
   scale_fill_manual(values = c("Missing" = "red", "Present" = "steelblue")) +
-  ggtitle("Missing vs. Present Values in mths_since_last_delinq") +
+  ggtitle("Figure 4: Missing vs. Present Values in mths_since_last_delinq") +
   xlab("Status") +
   ylab("Count")
 
 # Boxplot for only present values
 ggplot(myLCdata %>% filter(!is.na(mths_since_last_delinq)), aes(y = mths_since_last_delinq)) +
   geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +
-  ggtitle("Boxplot of mths_since_last_delinq (Only Present Values)") +
+  ggtitle("Figure 5: Boxplot of mths_since_last_delinq (Only Present Values)") +
   ylab("Months Since Last Delinquency") +
   theme_minimal()
 
@@ -200,7 +198,7 @@ In the previous task we indicated that there is moderate variability within the 
 # Boxplot for revol_util
 boxplot_revol_util <- ggplot(myLCdata, aes(y = revol_util)) +
   geom_boxplot(alpha = 0.7, fill = "steelblue") +  
-  labs(title = "Boxplot of Revolving Credit Utilization",
+  labs(title = "Figure 6: Boxplot of Revolving Credit Utilization",
        x = "",
        y = "Revolving Credit Utilization (%)") +
   theme_minimal()
@@ -211,7 +209,7 @@ ggplotly(boxplot_revol_util)
 # Histogram for revol_util
 ggplot(myLCdata, aes(x = revol_util)) +
   geom_histogram(bins = 50, fill = "steelblue", alpha = 0.7) +
-  ggtitle("Distribution of Revolving Credit Utilization") +
+  ggtitle("Figure 7: Distribution of Revolving Credit Utilization") +
   xlab("Revolving Credit Utilization (%)") +
   ylab("Frequency")
 ```
@@ -226,7 +224,7 @@ The boxplot shows a **wide spread of values**, with a significant number of **ou
 # Boxplot for tot_cur_bal
 boxplot_tot_cur_bal <- ggplot(myLCdata, aes(y = tot_cur_bal)) +
   geom_boxplot(alpha = 0.7, fill = "steelblue") +  
-  labs(title = "Boxplot of the current balance",
+  labs(title = "Figure 8: Boxplot of the current balance",
        x = "",
        y = "Current Balance") +
   theme_minimal()
@@ -242,7 +240,7 @@ The following histogram shows a sharp **peak at zero**, confirming that most bor
 ```{r plots delinq_2yrs, warning=FALSE}
 hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
   geom_histogram(bins = 20, fill = "steelblue", alpha = 0.5) +
-  ggtitle("Histogram of Delinquencies (30+ Days Past Due)") +
+  ggtitle("Figure 9: Histogram of Delinquencies (30+ Days Past Due)") +
   xlab("Number of Delinquencies (Past 2 Years)") +
   ylab("Frequency") +
   theme_minimal()
@@ -251,7 +249,7 @@ ggplotly(hist_delinq_2yrs)
 
 boxplot_delinq_2yrs <- ggplot(myLCdata, aes(y = delinq_2yrs)) +
   geom_boxplot(alpha = 0.7, fill = "steelblue") +
-  ggtitle("Boxplot of Delinquencies (30+ Days Past Due)") +
+  ggtitle("Figure 10: Boxplot of Delinquencies (30+ Days Past Due)") +
   ylab("Number of Delinquencies (Past 2 Years)") +
   theme_minimal()
 
@@ -261,12 +259,12 @@ ggplotly(boxplot_delinq_2yrs)
 
 # Task 4. Bivariate EDA with ggplot2
 
+Using ggpairs to visualize the relationship between all attributes in the dataset.
+
 ## Create Pairs Plot
-
-Using ggpairs to visualize the relationship between all attributes in the data set.
-
 ```{r ggpairs, warning=FALSE}
-ggpairs(myLCdata)
+ggpairs(myLCdata, columns = c("int_rate", "revol_util", "mths_since_last_delinq", "delinq_2yrs")) +
+  ggtitle("Figure 11: Selected Variable Relationships")
 ```
 
 ## Analyzing Insightful Subplots
@@ -275,53 +273,55 @@ Next we selected the following two types of 2-dimensional subplots that ggpairs(
 
 ### Interest Rate `int_rate` vs. Revolving Credit Utilization `revol_util`
 
-One notable relationship is between interest rate `int_rate` and revolving credit utilization `revol_util`, which shows a moderate **positive correlation of 0.271**. This suggests that borrowers who utilize a larger portion of their available credit tend to be charged higher interest rates. Lenders may perceive high credit utilization as a sign of greater financial dependency, increasing the risk associated with the borrower and justifying higher loan costs.
-
-### Months Since Last Delinquency `mths_since_last_delinq` vs. Number of Delinquencies in Past 2 Years `delinq_2yrs`
-
-Another significant finding is the **negative correlation (-0.561)** between `mths_since_last_delinq` and `delinq_2yrs`. This indicates that borrowers with more recent delinquencies tend to have a higher number of past delinquencies within the last two years. The pattern suggests that borrowers who have defaulted recently are more likely to have a history of repeated delinquencies, reinforcing their classification as high-risk individuals
-
-**More if necessary!!**
-
-## Standalone Plotting of Subplots
+One notable relationship is between **interest rate** `int_rate` and **revolving credit utilization** `revol_util`, which shows a moderate **positive correlation of 0.271**. This suggests that borrowers who utilize a larger portion of their available credit tend to be charged higher interest rates. Lenders may perceive high credit utilization as a sign of greater financial dependency, which increases the risk associated with the borrower and justifies a higher loan cost.
 
 ### Scatterplot with Regression Line (`revol_util` vs. `int_rate`)
 
-```{r scatter revol_util vs. int_rate, warning=FALSE}
+```{r scatter revol_util vs. int_rate, warning=FALSE, message=FALSE}
 # Scatterplot: Interest Rate vs. Revolving Credit Utilization
 ggplot(myLCdata, aes(x = revol_util, y = int_rate)) +
-  geom_point(alpha = 0.4, color = "steelblue") +  # Scatter points
-  geom_smooth(method = "lm", color = "red", se = TRUE) +  # Regression line
-  ggtitle("Interest Rate vs. Revolving Credit Utilization") +
+  geom_point(alpha = 0.4, color = "steelblue") +  
+  geom_smooth(color = "red") +  
+  ggtitle("Figure 12: Interest Rate vs. Revolving Credit Utilization") +
   xlab("Revolving Credit Utilization (%)") +
   ylab("Interest Rate (%)") +
   theme_minimal()
 ```
 
+This scatterplot illustrates the **relationship between revolving credit utilization `revol_util` and interest rate `int_rate`**.
+
+### Months Since Last Delinquency `mths_since_last_delinq` vs. Number of Delinquencies in Past 2 Years `delinq_2yrs`
+
+Another significant finding is the **negative correlation (-0.561)** between `mths_since_last_delinq` and `delinq_2yrs`. This indicates that borrowers with more recent delinquencies tend to have a higher number of past delinquencies within the last two years. The pattern suggests that borrowers who have defaulted recently are more likely to have a history of repeated delinquencies, which plays into their classification as high-risk individuals.
+
 ### Scatterplot with Regression Line (`mths_since_last_delinq` vs. `delinq_2yrs`)
 
-```{r scatter mths_since_last_delinq vs. delinq_2yrs, warning=FALSE}
+```{r scatter mths_since_last_delinq vs. delinq_2yrs, warning=FALSE, message=FALSE}
 ggplot(myLCdata, aes(x = mths_since_last_delinq, y = delinq_2yrs)) +
   geom_point(alpha = 0.4, color = "steelblue") +  
-  geom_smooth(method = "loess", color = "red", se = TRUE) +  
-  ggtitle("Months Since Last Delinquency vs. Delinquencies in the Past 2 Years") +
+  geom_smooth(color = "red") +  
+  ggtitle("Figure 13: Months Since Last Delinquency vs. Delinquencies in the Past 2 Years") +
   xlab("Months Since Last Delinquency") +
   ylab("Number of Delinquencies (Past 2 Years)") +
   theme_minimal()
 ```
 
-## Enhanced Scatterplot using Loan Amount as a Third Variable
+Similarly, this scatterplot visualizes the strong negative correlation (-0.561) between `mths_since_last_delinq` and `delinq_2yrs`. Borrowers who have had a delinquency recently tend to have more delinquencies in the past two years.
 
-**Describe!!**
+## Enhanced Scatterplot using Revolving Credit Utilization `revol_util` as a Third Variable
 
-```{r scatter third variable, warning=FALSE}
-# Enhanced Scatterplot: Adding Total Current Balance as a Third Variable
-ggplot(myLCdata, aes(x = revol_util, y = int_rate, color = revol_util)) +
-  geom_point(alpha = 0.6) +  # Scatter points with total balance as color
-  geom_smooth(method = "lm", color = "black", se = TRUE) +  # Regression line
-  scale_color_gradient(low = "steelblue", high = "red") +  # Color scale for tot_cur_bal
-  ggtitle("Interest Rate vs. Revolving Credit Utilization (Total Balance Highlighted)") +
-  xlab("Revolving Credit Utilization (%)") +
-  ylab("Interest Rate (%)") +
+We added `revol_util` as a third variable to the `mths_since_last_delinq` vs. `delinq_2yrs` plot to explore its impact on delinquencies. Credit utilization is a key financial indicator—borrowers with high `revol_util` may struggle more with repeated delinquencies. 
+
+This visualization helps reveal whether **high credit utilization correlates with frequent delinquencies**, which provides deeper insight into borrower risk profiles beyond just delinquency timing.
+
+
+```{r scatter third variable, warning=FALSE, message=FALSE}
+ggplot(myLCdata, aes(x = mths_since_last_delinq, y = delinq_2yrs, color = revol_util)) +
+  geom_point(alpha = 0.6) +  
+  geom_smooth(color = "red") +  
+  scale_color_gradient(low = "steelblue", high = "green", name = "Revol. Credit Utilization (%)") +  
+  ggtitle("Figure 15: Delinquencies vs. Months Since Last Delinquency (Revol. Credit Utilization)") +
+  xlab("Months Since Last Delinquency") +
+  ylab("Number of Delinquencies in Past 2 Years") +
   theme_minimal()
 ```
