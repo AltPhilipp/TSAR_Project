@@ -11,8 +11,8 @@ format:
     page-layout: full
 #format: pdf #Needs tinytex or similar
 editor: visual #Visual editor by default
-  markdown: 
-    wrap: 72
+# markdown:
+#   wrap: 72
 execute:
   echo: true  # Show code in output by default. If false no code only output.
 ---
@@ -22,7 +22,7 @@ execute:
 # need to be commented because myLCdata file must not always be created again
 # use only myLCdata <- fread("Data/myLCdata.csv")
 
-# install the required packages if needed
+# install required packages if needed
 if (!require("data.table")) install.packages("data.table")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("here")) install.packages("here")
@@ -31,7 +31,7 @@ if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("plotly")) install.packages("plotly")
 if (!require("GGally")) install.packages("GGally")
 
-# load them 
+# loading required packages
 library(data.table)
 library(dplyr)
 library(here)
@@ -51,7 +51,7 @@ library(GGally)
 myLCdata <- fread("Data/myLCdata.csv")
 ```
 
-```{r include=FALSE}
+```{r dynamic path setup, include=FALSE}
 # data_path <- file.path(here(), "Data", "myLCdata.csv")
 # print(here())
 # myLCdata <- fread(data_path)
@@ -81,10 +81,15 @@ Most our sampled features of the data set are self-explanatory when consulting t
 
 # Task 2. Data Understanding Based on Summary Statistics
 
-Using summary() and skimr::skim() to review the main statistical metrics of our attributes.
+Using `summary()` and `skimr::skim()` to review the main statistical metrics of our attributes.
 
-```{r summary()/skimr::skim()}
+## `summary()` 
+```{r summary()}
 summary(myLCdata)
+```
+
+## `skimr::skim()`
+```{r skimr::skim()}
 skimr::skim(myLCdata)
 ```
 
@@ -171,7 +176,7 @@ myLCdata %>%
   mutate(missing = ifelse(is.na(mths_since_last_delinq), "Missing", "Present")) %>%
   ggplot(aes(x = missing, fill = missing)) +
   geom_bar() +
-  scale_fill_brewer(palette = "Set1") +
+  scale_fill_manual(values = c("Missing" = "red", "Present" = "steelblue")) +
   ggtitle("Missing vs. Present Values in mths_since_last_delinq") +
   xlab("Status") +
   ylab("Count")
@@ -190,10 +195,11 @@ ggplot(myLCdata %>% filter(!is.na(mths_since_last_delinq)), aes(y = mths_since_l
 
 In the previous task we indicated that there is moderate variability within the attribute. To reveal if the attribute is evenly distributed, indicating that the dataset contains an evenly distributed amount of borrowers with low to high revolving dept utilization, the following boxplot and histogram were created. Note: This will produce a warning for 33 observations, which correspond to the missing values described above.
 
-```{r plots revol_util}
+```{r plots revol_util, warning=FALSE}
+# warning=FALSE --> suppress warnings in rendered version
 # Boxplot for revol_util
 boxplot_revol_util <- ggplot(myLCdata, aes(y = revol_util)) +
-  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
+  geom_boxplot(alpha = 0.7, fill = "steelblue") +  
   labs(title = "Boxplot of Revolving Credit Utilization",
        x = "",
        y = "Revolving Credit Utilization (%)") +
@@ -202,6 +208,7 @@ boxplot_revol_util <- ggplot(myLCdata, aes(y = revol_util)) +
 # Convert to interactive plot
 ggplotly(boxplot_revol_util) 
 
+# Histogram for revol_util
 ggplot(myLCdata, aes(x = revol_util)) +
   geom_histogram(bins = 50, fill = "steelblue", alpha = 0.7) +
   ggtitle("Distribution of Revolving Credit Utilization") +
@@ -218,7 +225,7 @@ The boxplot shows a **wide spread of values**, with a significant number of **ou
 ```{r plots tot_cur_bal, warning=FALSE}
 # Boxplot for tot_cur_bal
 boxplot_tot_cur_bal <- ggplot(myLCdata, aes(y = tot_cur_bal)) +
-  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
+  geom_boxplot(alpha = 0.7, fill = "steelblue") +  
   labs(title = "Boxplot of the current balance",
        x = "",
        y = "Current Balance") +
@@ -229,7 +236,8 @@ ggplotly(boxplot_tot_cur_bal)
 
 ## Diagrams for `delinq_2yrs`
 
-The following histogram shows a sharp **peak at zero** confirming that most borrowers have not had delinquencies longer than 30 days within the last two years. This undermines the previously expressed **data bias,** as the imbalance suggest that a predictive model might struggle to generalize to riskier customers.
+The following histogram shows a sharp **peak at zero**, confirming that most borrowers have not experienced delinquencies of more than 30 days in the past two years. This challenges the previously mentioned **data bias**, as the imbalance suggests that a predictive model may struggle to generalize to riskier customers. In addition, a box plot was created for this variable to examine outliers, that is, borrowers who had more than zero delinquencies over 30 days in the past two years.
+
 
 ```{r plots delinq_2yrs, warning=FALSE}
 hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
@@ -240,6 +248,15 @@ hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
   theme_minimal()
 
 ggplotly(hist_delinq_2yrs)
+
+boxplot_delinq_2yrs <- ggplot(myLCdata, aes(y = delinq_2yrs)) +
+  geom_boxplot(alpha = 0.7, fill = "steelblue") +
+  ggtitle("Boxplot of Delinquencies (30+ Days Past Due)") +
+  ylab("Number of Delinquencies (Past 2 Years)") +
+  theme_minimal()
+
+ggplotly(boxplot_delinq_2yrs)
+
 ```
 
 # Task 4. Bivariate EDA with ggplot2
@@ -249,9 +266,7 @@ ggplotly(hist_delinq_2yrs)
 Using ggpairs to visualize the relationship between all attributes in the data set.
 
 ```{r ggpairs, warning=FALSE}
-# warning=FALSE --> suppress warnings in rendered version
 ggpairs(myLCdata)
-
 ```
 
 ## Analyzing Insightful Subplots
@@ -304,7 +319,7 @@ ggplot(myLCdata, aes(x = mths_since_last_delinq, y = delinq_2yrs)) +
 ggplot(myLCdata, aes(x = revol_util, y = int_rate, color = revol_util)) +
   geom_point(alpha = 0.6) +  # Scatter points with total balance as color
   geom_smooth(method = "lm", color = "black", se = TRUE) +  # Regression line
-  scale_color_gradient(low = "blue", high = "red") +  # Color scale for tot_cur_bal
+  scale_color_gradient(low = "steelblue", high = "red") +  # Color scale for tot_cur_bal
   ggtitle("Interest Rate vs. Revolving Credit Utilization (Total Balance Highlighted)") +
   xlab("Revolving Credit Utilization (%)") +
   ylab("Interest Rate (%)") +
