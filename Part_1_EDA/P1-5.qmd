@@ -81,12 +81,14 @@ Most our sampled features of the data set are self-explanatory when consulting t
 
 Using `summary()` and `skimr::skim()` to review the main statistical metrics of our attributes.
 
-## `summary()` 
+## `summary()`
+
 ```{r summary()}
 summary(myLCdata)
 ```
 
 ## `skimr::skim()`
+
 ```{r skimr::skim()}
 skimr::skim(myLCdata)
 ```
@@ -122,7 +124,7 @@ The distribution of `tot_cur_bal` is **highly skewed to the right**, which can b
 
 A large proportion of values are **zero**, as the median and interquartile range all indicate no delinquencies. The mean is also close to zero, suggesting that most borrowers have had **no** 30+ days past-due incidences of delinquency in the past two years. However, the presence of a high number of "solid" borrowers could potentially introduce biases in predictive models if not handled properly, potentially reducing generalizability.
 
-The dataset reveals over **8000 outliers** for `delinq_2yrs`. Given the quartile values, most of these outliers are likely **borrowers with exactly 1 delinquency**, which is a key insight. The presence of only a few cases with higher values suggests that **delinquencies of more than 1 occurrence are rare** in this dataset.
+The dataset reveals over **8000 outliers** for `delinq_2yrs`. Given the quartile values, most of these outliers are likely **borrowers with exactly 1 delinquency**, which is a key insight. The presence of only a few cases with higher values suggests that **delinquencies of more than 1 occurrence are rare** in this dataset. Therefore, most borrowers do not show multiple occurrences of 30+ days past-due incidences of delinquency for the past 2 years.
 
 # Task 3. Univariate Exploratory Data Analysis (EDA) with ggplot2
 
@@ -136,7 +138,7 @@ Based on the respective data type of each attribute, the following diagram types
 
 ## Diagrams for `int_rate`
 
-In task 2 we claimed that the int_rate attribute tends to show a normal distribution. Let's now use some suitable graphs to investigate and proof this claim.
+In task 2 we claimed that the `int_rate` attribute tends to show a normal distribution. Let's now use some suitable graphs to investigate and proof this claim.
 
 The following Histogram with a density plot and the theoretical normal density function (orange dashed line), as well as the Q-Q Plot (used to compare the feature's distribution) aim to visualize the existence of a normal distribution of the attribute int_rate:
 
@@ -162,7 +164,7 @@ qqnorm(myLCdata$int_rate, main = "Figure 2: Normal Q-Q Plot of int_rate", pch = 
 qqline(myLCdata$int_rate, col = "red", lwd = 2)
 ```
 
-Based on the histogram with the density plot, the int_rate attribute shows a roughly bell-shaped distribution but exhibits slight right skewness. While many points in the Q-Q plot follow the red line, deviations at the tails suggest that the distribution is not perfectly normal. However, the assumption of approximate normality made in Task 2 still holds reasonably well for most of the data, with some caution needed for outliers.
+Based on the histogram with the density plot, the `int_rate` attribute shows a roughly bell-shaped distribution but exhibits slight right skewness. While many points in the Q-Q plot follow the red line, deviations at the tails suggest that the distribution is not perfectly normal. However, the assumption of approximate normality made in Task 2 still holds reasonably well for most of the data, with some caution needed for outliers.
 
 ## Diagrams for `mths_since_last_delinq`
 
@@ -236,7 +238,6 @@ ggplotly(boxplot_tot_cur_bal)
 
 The following histogram shows a sharp **peak at zero**, confirming that most borrowers have not experienced delinquencies of more than 30 days in the past two years. This challenges the previously mentioned **data bias**, as the imbalance suggests that a predictive model may struggle to generalize to riskier customers. In addition, a box plot was created for this variable to examine outliers, that is, borrowers who had more than zero delinquencies over 30 days in the past two years.
 
-
 ```{r plots delinq_2yrs, warning=FALSE}
 hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
   geom_histogram(bins = 20, fill = "steelblue", alpha = 0.5) +
@@ -262,6 +263,7 @@ ggplotly(boxplot_delinq_2yrs)
 Using ggpairs to visualize the relationship between all attributes in the dataset.
 
 ## Create Pairs Plot
+
 ```{r ggpairs, warning=FALSE}
 ggpairs(myLCdata, columns = c("int_rate", "revol_util", "mths_since_last_delinq", "delinq_2yrs")) +
   ggtitle("Figure 11: Selected Variable Relationships")
@@ -310,10 +312,9 @@ Similarly, this scatterplot visualizes the strong negative correlation (-0.561) 
 
 ## Enhanced Scatterplot using Revolving Credit Utilization `revol_util` as a Third Variable
 
-We added `revol_util` as a third variable to the `mths_since_last_delinq` vs. `delinq_2yrs` plot to explore its impact on delinquencies. Credit utilization is a key financial indicator—borrowers with high `revol_util` may struggle more with repeated delinquencies. 
+We added `revol_util` as a third variable to the `mths_since_last_delinq` vs. `delinq_2yrs` plot to explore its impact on delinquencies. Credit utilization is a key financial indicator—borrowers with high `revol_util` may struggle more with repeated delinquencies.
 
 This visualization helps reveal whether **high credit utilization correlates with frequent delinquencies**, which provides deeper insight into borrower risk profiles beyond just delinquency timing.
-
 
 ```{r scatter third variable, warning=FALSE, message=FALSE}
 ggplot(myLCdata, aes(x = mths_since_last_delinq, y = delinq_2yrs, color = revol_util)) +
