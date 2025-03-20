@@ -1,18 +1,31 @@
 ---
-title: "TSAR Project Assignment Part1"
+title: "TSAR Project Assignment Part 1"
 subtitle: "Exploratory Data Analysis with ggplot2"
 author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
-date : today
-#warning: false
+date: today
 format:
-  html:
-    theme: zephyr
-    code-fold: true
-    page-layout: full
-#format: pdf #Needs tinytex or similar
-editor: visual #Visual editor by default
+  pdf:
+    code-overflow: wrap  # Prevent code overflow
+    code-line-numbers: true  # Show line numbers in code
+    fig-width: 7  # Adjust figure width
+    fig-height: 5  # Adjust figure height
+    fig-pos: "H"  # Keep figures in place
+    fig-align: center  # Align figures at the center
+    tbl-cap-location: top  # Table captions at the top
+    tbl-colwidths: auto  # Allow tables to auto-adjust width
+    geometry: a4paper, margin=1.25in  # A4 page with slightly reduced margins
+    header-includes:
+      - \usepackage{longtable}  # Enables tables that span multiple pages
+      - \usepackage{booktabs}  # Improves table styling
+      - \usepackage{array}  # Allows better column width control
+      - \renewcommand{\arraystretch}{1.3}  # Increases row height for readability
+      - \setlength{\tabcolsep}{4pt}  # Adjusts column padding for better spacing
+      - \usepackage{graphicx}  # Improves figure and table scaling
+      - \usepackage{adjustbox}  # Enables full-width table scaling
+      - \usepackage{lscape}  # Enables landscape tables (if needed)
+editor: visual
 execute:
-  echo: true  # Show code in output by default. If false no code only output.
+  echo: true  # Show code in output
 ---
 
 ```{r setup, include=FALSE}
@@ -214,14 +227,14 @@ In the previous task we indicated that there is moderate variability within the 
 # warning=FALSE --> suppress warnings in rendered version
 # Boxplot for revol_util
 boxplot_revol_util <- ggplot(myLCdata, aes(y = revol_util)) +
-  geom_boxplot(alpha = 0.7, fill = "steelblue") +  
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
   labs(title = "Boxplot of Revolving Credit Utilization",
        x = "",
        y = "Revolving Credit Utilization (%)") +
   theme_minimal()
 
 # Convert to interactive plot
-ggplotly(boxplot_revol_util) 
+print(boxplot_revol_util) 
 
 ```
 
@@ -247,13 +260,13 @@ The boxplot, shown in @fig-bp-current-balance, displays a **wide spread of value
 #| fig-cap: "Boxplot of the current balance"
 # Boxplot for tot_cur_bal
 boxplot_tot_cur_bal <- ggplot(myLCdata, aes(y = tot_cur_bal)) +
-  geom_boxplot(alpha = 0.7, fill = "steelblue") +  
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +  
   labs(title = "Boxplot of the current balance",
        x = "",
        y = "Current Balance") +
   theme_minimal()
 # Convert to interactive plot
-ggplotly(boxplot_tot_cur_bal)
+print(boxplot_tot_cur_bal)
 ```
 
 ## Diagrams for `delinq_2yrs`
@@ -270,7 +283,7 @@ hist_delinq_2yrs <- ggplot(myLCdata, aes(x = delinq_2yrs)) +
   ylab("Frequency") +
   theme_minimal()
 
-ggplotly(hist_delinq_2yrs)
+print(hist_delinq_2yrs)
 
 ```
 
@@ -278,13 +291,12 @@ ggplotly(hist_delinq_2yrs)
 #| label: fig-bp-delinquencies
 #| fig-cap: "Boxplot of Delinquencies (30+ Days Past Due)"
 boxplot_delinq_2yrs <- ggplot(myLCdata, aes(y = delinq_2yrs)) +
-  geom_boxplot(alpha = 0.7, fill = "steelblue") +
+  geom_boxplot(alpha = 0.7, outlier.color = "red", fill = "steelblue") +
   ggtitle("Boxplot of Delinquencies (30+ Days Past Due)") +
   ylab("Number of Delinquencies (Past 2 Years)") +
   theme_minimal()
 
-ggplotly(boxplot_delinq_2yrs)
-
+print(boxplot_delinq_2yrs)
 ```
 
 # Task 4. Bivariate EDA with ggplot2
@@ -374,8 +386,6 @@ ggplot(myLCdata, aes(x = mths_since_last_delinq, y = delinq_2yrs, color = revol_
   xlab("Months Since Last Delinquency") +
   ylab("Number of Delinquencies in Past 2 Years") +
   theme_minimal()
-
-
 ```
 
 The key takeaway of @fig-line-plot is that borrowers with recent delinquencies (0-10 months) tend to have higher revolving credit utilization, which could indicate financial stress. As the time since the last delinquency increases, the number of delinquencies in the past 2 years drops significantly. Most low-risk borrowers (0 delinquencies) haven’t defaulted for 50+ months, showing that a longer clean credit history is a strong indicator of creditworthiness.
