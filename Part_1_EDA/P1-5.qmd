@@ -307,8 +307,7 @@ To examine relationships between variables, we use the `ggpairs()` function to g
 ```{r ggpairs, warning=FALSE}
 #| label: fig-var-relationship
 #| fig-cap: "Selected Variable Relationships"
-ggpairs(myLCdata, columns = c("int_rate", "revol_util", 
-                              "mths_since_last_delinq", "delinq_2yrs")) +
+ggpairs(myLCdata) +
   ggtitle("Selected Variable Relationships")
 ```
 
