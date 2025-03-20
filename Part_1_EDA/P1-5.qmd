@@ -5,21 +5,21 @@ author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
 date: today
 date-format: long
 format:
-  # html:
-  #   theme: zephyr
-  #   code-fold: true
-  #   page-layout: full
-  pdf:
-    code-overflow: wrap  # Prevent code overflow
-    number-sections: true # Section Numbers
-    code-line-numbers: true  # Show line numbers in code
-    fig-width: 7  # Adjust figure width
-    fig-height: 5  # Adjust figure height
-    fig-pos: "H"  # Keep figures in place
-    fig-align: center  # Align figures at the center
-    tbl-cap-location: top  # Table captions at the top
-    tbl-colwidths: auto  # Allow tables to auto-adjust width
-    geometry: a4paper, margin = 1.0in  # A4 page with slightly reduced margins
+  html:
+    theme: zephyr
+    code-fold: true
+    page-layout: full
+  # pdf:
+  #   code-overflow: wrap  # Prevent code overflow
+  #   number-sections: true # Section Numbers
+  #   code-line-numbers: true  # Show line numbers in code
+  #   fig-width: 7  # Adjust figure width
+  #   fig-height: 5  # Adjust figure height
+  #   fig-pos: "H"  # Keep figures in place
+  #   fig-align: center  # Align figures at the center
+  #   tbl-cap-location: top  # Table captions at the top
+  #   tbl-colwidths: auto  # Allow tables to auto-adjust width
+  #   geometry: a4paper, margin = 1.0in  # A4 page with slightly reduced margins
 editor: visual
 execute:
   echo: true  # Show code in output
