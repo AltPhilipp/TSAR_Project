@@ -3,6 +3,7 @@ title: "TSAR Project Assignment Part 1"
 subtitle: "Exploratory Data Analysis with ggplot2"
 author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
 date: today
+date-format: long
 format:
   # html:
   #   theme: zephyr
@@ -18,7 +19,7 @@ format:
     fig-align: center  # Align figures at the center
     tbl-cap-location: top  # Table captions at the top
     tbl-colwidths: auto  # Allow tables to auto-adjust width
-    geometry: a4paper, margin = 1.1in  # A4 page with slightly reduced margins
+    geometry: a4paper, margin = 1.0in  # A4 page with slightly reduced margins
 editor: visual
 execute:
   echo: true  # Show code in output
@@ -68,17 +69,18 @@ myLCdata <- fread("Data/myLCdata.csv")
 
 To gain an initial understanding of our data set, we will use two basic functions, namely `dplyr::glimpse()` and `str()`. 
 
-## Overview of Data Set Structure using `dplyr glimpse()`
+## Overview of Data Set Structure using `dplyr::glimpse()`
 
 ```{r glimpse()}
-# Usage of glimpes() to get a first overview over our 5 features
+# Usage of glimpse() to gain a first overview over our five sampled variables.
 dplyr::glimpse(myLCdata)
 ```
 
 ## Detailed Attribute Inspection using `str()`
 
 ```{r str()}
-# Usage of str() to get further insights into our dataset
+# Usage of str() to get further insights into our data set.
+# Notice: Some values will exceed document boundaries when rendered as PDF.
 str(myLCdata)
 ```
 
@@ -99,6 +101,7 @@ summary(myLCdata)
 ## Detailed and Structured Overview using`skimr::skim()`
 
 ```{r skimr::skim()}
+# Notice: Some values will not be displayed correctly when rendered as PDF.
 skimr::skim(myLCdata)
 ```
 
