@@ -1,0 +1,75 @@
+---
+title: "TSAR Project Assignment Part 2"
+subtitle: "Data Wrangling with dplyr and tidyr"
+author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
+date: today
+date-format: long
+format:
+  html:
+    theme: zephyr
+    code-fold: true
+    page-layout: full
+  # pdf:
+  #   code-overflow: wrap  # Prevent code overflow
+  #   number-sections: true # Section Numbers
+  #   code-line-numbers: true  # Show line numbers in code
+  #   fig-width: 7  # Adjust figure width
+  #   fig-height: 5  # Adjust figure height
+  #   fig-pos: "H"  # Keep figures in place
+  #   fig-align: center  # Align figures at the center
+  #   tbl-cap-location: top  # Table captions at the top
+  #   tbl-colwidths: auto  # Allow tables to auto-adjust width
+  #   geometry: a4paper, margin = 1.0in  # A4 page with slightly reduced margins
+editor: visual
+execute:
+  echo: true  # Show code in output
+---
+
+```{r setup, include=FALSE}
+# install the required packages if needed
+# need to be commented because myLCdata file must not always be created again
+# use only myLCdata <- fread("Data/myLCdata.csv")
+
+# install required packages if needed
+if (!require("here")) install.packages("here")
+if (!require("data.table")) install.packages("data.table")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("DataExplorer")) install.packages("DataExplorer")
+
+
+# loading required packages
+library(here)
+library(data.table)
+library(dplyr)
+library(DataExplorer)
+
+
+# Loading the myLCdata file from Part 1
+data_path <- file.path(here(), "Part_1_EDA/Data", "myLCdata.csv")
+print(data_path)
+myLCdata <- fread(data_path)
+
+# Applying Dirtyfy to myLCdata
+TSAR_ID = 5
+rds_path <- file.path(here(),"Part_2_Data_Wrangling", "dirtyfy.rds")
+print(rds_path)
+dirtyfy_function <- readRDS(rds_path)
+myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID)
+
+# Loading Missing_Data_Profile.png
+png_path <- file.path(here(),"Part_2_Data_Wrangling", "Missing_Data_Profile.png")
+```
+
+# Task 1
+
+Creating a report using the DataExplorer's function `create_report()` .
+
+```{r}
+# create_report(myLCdata_dirty)
+```
+
+## Screenshot of the Missing Data Profile overview
+
+![Missing Data Profile](Missing_Data_Profile.png)
+
+# Task 2
