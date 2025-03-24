@@ -35,13 +35,19 @@ if (!require("here")) install.packages("here")
 if (!require("data.table")) install.packages("data.table")
 if (!require("dplyr")) install.packages("dplyr")
 if (!require("DataExplorer")) install.packages("DataExplorer")
+if (!require("tidyr")) install.packages("tidyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("scales")) install.packages("scales")
 
 
 # loading required packages
 library(here)
 library(data.table)
 library(dplyr)
+library(tidyr)
 library(DataExplorer)
+library(ggplot2)
+library(scales)
 
 
 # Loading the myLCdata file from Part 1
@@ -73,3 +79,140 @@ Creating a report using the DataExplorer's function `create_report()` .
 ![Missing Data Profile](Missing_Data_Profile.png)
 
 # Task 2
+
+We decided to split Task 2 into four steps for better readability and also a increased learning experience.
+
+## 1. Counting specials 🧮
+
+Our first goal was to create a new data frame object called `char_specials`. `char_specials` is a **data frame** with **one row**, where each **column** contains the **count** of a specific type of special value, as indicated in the project description (e.g., `NA`, `"n/a"`, etc.), for each **character column** in the original `myLCdata_dirty`. However, since our underlying data frame from project one, `myLCdata,` only contains numerical values, we expected the counts to be zero or empty for the character columns. However, we found out that the result will be a empty **tibble,** or in other words, and **empty data frame.**
+
+```{r}
+char_specials <- myLCdata_dirty %>%
+  summarise(
+    across(
+      where(is.character),                    # Apply to all character columns
+      list(
+        na_count = ~sum(is.na(.)),            # Count NA
+        n_a_count = ~sum(. == "n/a"),         # Count "n/a"
+        space_count = ~sum(. == " "),         # Count single space
+        empty_count = ~sum(. == "")           # Count empty strings
+      ),
+      .names = "{.col}_{.fn}"                 # Create clear output column names
+    )
+  )
+
+# Testing what char_specials really is now
+print(typeof(char_specials))
+ncol(char_specials) 
+nrow(char_specials) 
+is.data.frame(char_specials)  
+str(char_specials)
+```
+
+Following, we applied the same approach for the numerical values that the `myLCdata_dirty` data frame contains.
+
+```{r}
+num_specials <- myLCdata_dirty %>%
+  summarise(
+    across(
+      where(is.numeric),
+      list(
+        na_count = ~sum(is.na(.)),
+        nan_count = ~sum(is.nan(.))
+      ),
+      .names = "{.col}_{.fn}"
+    )
+  )
+
+```
+
+## 2. Identifying outliers and relative calculation 📊
+
+Secondly, we focused on the outliers. For that, we could recycle the logic or approach we did in step one. Since we already proofed again that our the underlying data set does not hold any character values, we solely focused on the `is.numeric` analysis.
+
+```{r}
+outlier_specials <- myLCdata_dirty %>%
+  summarise(
+    across(
+      where(is.numeric),
+      ~length(boxplot.stats(.)$out),
+      .names = "{.col}_outlier_count"
+    )
+  )
+
+```
+
+The above code created a new data frame called `outlier_specials` that holds the following values.
+
+```{r}
+head(outlier_specials)
+is.data.frame(outlier_specials)
+```
+
+When comparing the above values with our plots created for Task 1, the numbers appear to be reasonable.
+
+## 3. Tidying Data 🧹
+
+Our next goals was to create a **tidy** data frame showing the **percentage** of:
+
+-   `NA`
+
+-   `NaN`
+
+-   `outliers`
+
+for each **numeric column** in `myLCdata_dirty`.
+
+First, we can bind our two previously created data frames `num_speicals` and `outlier_specials` together. Again, as justified earlier, we can neglect the analysis for characteristic values.
+
+```{r}
+# creating a new data fram that binds the data together
+num_all_specials <- bind_cols(num_specials, outlier_specials)
+
+```
+
+Subsequently, we needed to tidy our data frame `num_all_specials` using the `pivot_long()` function from **tidyr.** This step was actually quite helpful to understand the pivot_long() logic in a "real" use case.
+
+```{r}
+
+num_all_specials_long <- num_all_specials %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = c("variable", "type"),
+    names_sep = "_(?=[^_]+$)",  # Split at last underscore
+    values_to = "count"
+  )
+
+```
+
+Lastly, we now needed to convert the counts to percentage. This revealed to be an easy task, since we could make use of the introduced `mutate()` function.
+
+```{r}
+# adding the column percentage to the num_all_specials_long data frame
+num_all_specials_long <- num_all_specials_long %>%
+  mutate(
+    percentage = count / nrow(myLCdata_dirty)
+  )
+
+print(nrow(myLCdata_dirty))
+
+```
+
+## 4. Plotting the results 📈
+
+We now wanted to bring our tidy data frame to life with a plot using **ggplot2.**
+
+```{r}
+ggplot(num_all_specials_long, aes(x = variable, y = percentage, fill = type)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_y_continuous(labels = percent) +
+  labs(
+    title = "Percentage of Special Values per Numeric Variable",
+    x = "Variable",
+    y = "Percentage",
+    fill = "Special Value Type"
+  ) +
+  theme_minimal()
+
+```

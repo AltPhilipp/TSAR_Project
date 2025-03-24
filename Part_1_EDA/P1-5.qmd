@@ -67,7 +67,7 @@ myLCdata <- fread("Data/myLCdata.csv")
 
 # Task 1. Business Understanding
 
-To gain an initial understanding of our data set, we will use two basic functions, namely `dplyr::glimpse()` and `str()`. 
+To gain an initial understanding of our data set, we will use two basic functions, namely `dplyr::glimpse()` and `str()`.
 
 ## Overview of Data Set Structure using `dplyr::glimpse()`
 
