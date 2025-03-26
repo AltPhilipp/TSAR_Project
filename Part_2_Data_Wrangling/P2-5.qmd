@@ -56,11 +56,11 @@ print(data_path)
 myLCdata <- fread(data_path)
 
 # Applying Dirtyfy to myLCdata
-TSAR_ID = 5
+TSAR_ID <- 5
 rds_path <- file.path(here(),"Part_2_Data_Wrangling", "dirtyfy.rds")
 print(rds_path)
-dirtyfy_function <- readRDS(rds_path)
-myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID)
+dirtyfy_function <- readRDS(rds_path) # Load dirtyfy function
+myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID) # Apply dirtyfy to df
 
 # Loading Missing_Data_Profile.png
 png_path <- file.path(here(),"Part_2_Data_Wrangling", "Missing_Data_Profile.png")
@@ -71,7 +71,7 @@ png_path <- file.path(here(),"Part_2_Data_Wrangling", "Missing_Data_Profile.png"
 Creating a report using the DataExplorer's function `create_report()` .
 
 ```{r}
-# create_report(myLCdata_dirty)
+# create_report(myLCdata_dirty) # Generate EDA Report (Don't execute in doc.)
 ```
 
 ## Screenshot of the Missing Data Profile overview
@@ -80,11 +80,11 @@ Creating a report using the DataExplorer's function `create_report()` .
 
 # Task 2
 
-We decided to split Task 2 into four steps for better readability and also a increased learning experience.
+We decided to split Task 2 into four steps for better readability and an increased learning experience.
 
 ## 1. Counting specials 🧮
 
-Our first goal was to create a new data frame object called `char_specials`. `char_specials` is a **data frame** with **one row**, where each **column** contains the **count** of a specific type of special value, as indicated in the project description (e.g., `NA`, `"n/a"`, etc.), for each **character column** in the original `myLCdata_dirty`. However, since our underlying data frame from project one, `myLCdata,` only contains numerical values, we expected the counts to be zero or empty for the character columns. However, we found out that the result will be a empty **tibble,** or in other words, and **empty data frame.**
+Our first goal was to create a new data frame object called `char_specials`. `char_specials` is a **data frame** with **one row**, where each **column** contains the **count** of a specific type of special value, as indicated in the project description (e.g., `NA`, `"n/a"`, etc.), for each **character column** in the original `myLCdata_dirty`. However, since our underlying data frame from project one, `myLCdata,` only contains numerical values, we expected the counts to be zero or empty for the character columns. We found out that the result will be a empty **tibble,** or in other words, an **empty data frame.**
 
 ```{r}
 char_specials <- myLCdata_dirty %>%
@@ -92,9 +92,9 @@ char_specials <- myLCdata_dirty %>%
     across(
       where(is.character),                    # Apply to all character columns
       list(
-        na_count = ~sum(is.na(.)),            # Count NA
-        n_a_count = ~sum(. == "n/a"),         # Count "n/a"
-        space_count = ~sum(. == " "),         # Count single space
+        na_count = ~sum(is.na(.)),            # Count NAs
+        n_a_count = ~sum(. == "n/a"),         # Count "n/a" strings
+        space_count = ~sum(. == " "),         # Count single spaces
         empty_count = ~sum(. == "")           # Count empty strings
       ),
       .names = "{.col}_{.fn}"                 # Create clear output column names
@@ -102,14 +102,14 @@ char_specials <- myLCdata_dirty %>%
   )
 
 # Testing what char_specials really is now
-print(typeof(char_specials))
-ncol(char_specials) 
-nrow(char_specials) 
-is.data.frame(char_specials)  
+# print(typeof(char_specials))
+# ncol(char_specials) 
+# nrow(char_specials) 
+# is.data.frame(char_specials)  
 str(char_specials)
 ```
 
-Following, we applied the same approach for the numerical values that the `myLCdata_dirty` data frame contains.
+Following that, we applied the same approach for the numerical values that the `myLCdata_dirty` data frame contains.
 
 ```{r}
 num_specials <- myLCdata_dirty %>%
@@ -117,13 +117,18 @@ num_specials <- myLCdata_dirty %>%
     across(
       where(is.numeric),
       list(
-        na_count = ~sum(is.na(.)),
-        nan_count = ~sum(is.nan(.))
+        na_count = ~sum(is.na(.)),   # Count NAs
+        nan_count = ~sum(is.nan(.))  # Count NaNs
       ),
       .names = "{.col}_{.fn}"
     )
   )
 
+# print(typeof(num_specials))
+# ncol(num_specials) 
+# nrow(num_specials) 
+# is.data.frame(num_specials)  
+str(num_specials) # df structure
 ```
 
 ## 2. Identifying outliers and relative calculation 📊
@@ -134,12 +139,11 @@ Secondly, we focused on the outliers. For that, we could recycle the logic or ap
 outlier_specials <- myLCdata_dirty %>%
   summarise(
     across(
-      where(is.numeric),
-      ~length(boxplot.stats(.)$out),
+      where(is.numeric), # Across all numeric values
+      ~length(boxplot.stats(.)$out), # Get number of outliers of each variable
       .names = "{.col}_outlier_count"
     )
   )
-
 ```
 
 The above code created a new data frame called `outlier_specials` that holds the following values.
@@ -163,15 +167,15 @@ Our next goals was to create a **tidy** data frame showing the **percentage** of
 
 for each **numeric column** in `myLCdata_dirty`.
 
-First, we can bind our two previously created data frames `num_speicals` and `outlier_specials` together. Again, as justified earlier, we can neglect the analysis for characteristic values.
+First, we can bind our two previously created data frames `num_speicals` and `outlier_specials` together. Again, as justified earlier, we do not have to do an analysis for characteristic values.
 
 ```{r}
 # creating a new data fram that binds the data together
 num_all_specials <- bind_cols(num_specials, outlier_specials)
-
+# head(num_all_specials) # Might lead to overflow in PDF
 ```
 
-Subsequently, we needed to tidy our data frame `num_all_specials` using the `pivot_long()` function from **tidyr.** This step was actually quite helpful to understand the pivot_long() logic in a "real" use case.
+Subsequently, we needed to tidy our data frame `num_all_specials` using the `pivot_longer()` function from **tidyr.** This step was actually quite helpful to understand the `pivot_longer()` logic in a "real" use case.
 
 ```{r}
 
@@ -183,19 +187,36 @@ num_all_specials_long <- num_all_specials %>%
     values_to = "count"
   )
 
+print(num_all_specials_long) # df is now restructured with columns now as rows (longer logic)
 ```
 
-Lastly, we now needed to convert the counts to percentage. This revealed to be an easy task, since we could make use of the introduced `mutate()` function.
+Next, we now needed to convert the **counts to percentage**. For this step we made use of the introduced `mutate()` function.
 
 ```{r}
-# adding the column percentage to the num_all_specials_long data frame
-num_all_specials_long <- num_all_specials_long %>%
+num_all_specials_long <- num_all_specials_long %>% # Apply following functions to df
   mutate(
-    percentage = count / nrow(myLCdata_dirty)
+    percentage = count / nrow(myLCdata_dirty) # First: compute percentage using `count`
+  ) %>%
+  separate(variable, into = c("attribute", "type"), sep = "_(?=[^_]+$)") %>%
+  select(attribute, type, percentage)  # Then drop `count` to keep it clean
+
+# print(nrow(myLCdata_dirty))
+print(num_all_specials_long)
+```
+
+At this point, our data frame is **not fully tidy**, as it contains multiple separate rows representing different attributes of the same variable. Therefore, as a final step before visualization, we need to ensure the data conforms to a **wide tidy structure**. For example, the `int_rate` variable currently appears in two distinct rows, each representing the counts and percentages of missing values (i.e., NAs and NaNs) separately.
+
+```{r}
+
+# Pivot to wide format to get one row per attribute
+num_all_specials_tidy <- num_all_specials_long %>%
+  pivot_wider(
+    names_from = type,
+    values_from = percentage,
+    names_prefix = "perc_"
   )
 
-print(nrow(myLCdata_dirty))
-
+print(num_all_specials_tidy)
 ```
 
 ## 4. Plotting the results 📈
@@ -203,16 +224,33 @@ print(nrow(myLCdata_dirty))
 We now wanted to bring our tidy data frame to life with a plot using **ggplot2.**
 
 ```{r}
-ggplot(num_all_specials_long, aes(x = variable, y = percentage, fill = type)) +
-  geom_col(position = "dodge") +
-  coord_flip() +
-  scale_y_continuous(labels = percent) +
-  labs(
-    title = "Percentage of Special Values per Numeric Variable",
-    x = "Variable",
-    y = "Percentage",
-    fill = "Special Value Type"
+ggplot(num_all_specials_long, aes(x = attribute, y = percentage)) +
+  geom_col(width = 0.7, fill = "steelblue") +
+  geom_text(
+    aes(label = scales::percent(percentage, accuracy = 0.1)),
+    hjust = -0.2,                      
+    size = 3.5,                        # Font size of the labels
+    color = "red"
   ) +
-  theme_minimal()
-
+  coord_flip() +
+  scale_y_continuous(
+    labels = percent_format(), 
+    breaks = seq(0, 1, by = 0.1),
+    limits = c(0, 0.7)
+  ) +
+  facet_wrap(~type, ncol = 1, scales = "free_y") +
+  labs(
+    title = "Percentage of special values in the numerical attributes of 'myLCdata'",
+    x = NULL,
+    y = NULL
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5),
+    strip.text = element_text(face = "bold", size = 11),
+    panel.grid.major.y = element_line(color = "white"),  # Re-enable Y grid lines
+    panel.grid.major.x = element_line(color = "white"),  # Subtle X grid lines
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "grey90", color = NA)
+  )
 ```
