@@ -52,20 +52,28 @@ library(ggplot2)
 library(scales)
 
 
-# Loading the myLCdata file from Part 1
-data_path <- file.path(here(), "Part_1_EDA/Data", "myLCdata.csv")
+TSAR_ID <- 5
+
+# Please make sure to set WD to the same folder as .qmd file.
+data_path <- "Data/myLCdata.csv"
+rds_path <- "dirtyfy.rds"
+png_path <- "Data/Missing_Data_Profile.png"
+
+# Load data and dirtyfy function
 print(data_path)
 myLCdata <- fread(data_path)
-
-# Applying Dirtyfy to myLCdata
-TSAR_ID <- 5
-rds_path <- file.path(here(),"Part_2_Data_Wrangling", "dirtyfy.rds")
 print(rds_path)
-dirtyfy_function <- readRDS(rds_path) # Load dirtyfy function
-myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID) # Apply dirtyfy to df
+dirtyfy_function <- readRDS(rds_path)
+myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID)
 
-# Loading Missing_Data_Profile.png
-png_path <- file.path(here(),"Part_2_Data_Wrangling", "Missing_Data_Profile.png")
+# # OPTIONAL: Original project-based paths using `here()` (if needed)
+# data_path <- file.path(here(), "Part_1_EDA/Data", "myLCdata.csv")
+# rds_path <- file.path(here(), "Part_2_Data_Wrangling", "dirtyfy.rds")
+# png_path <- file.path(here(), "Part_2_Data_Wrangling", "Missing_Data_Profile.png")
+# 
+# myLCdata <- fread(data_path)
+# dirtyfy_function <- readRDS(rds_path)
+# myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID)
 ```
 
 # Introduction
@@ -95,7 +103,7 @@ We decided to split Task 2 into four steps for better readability and an increas
 
 Our first goal was to create a new data frame object called `char_specials`. `char_specials` is a **data frame** with **one row**, where each **column** contains the **count** of a specific type of special value, as indicated in the project description (e.g., `NA`, `"n/a"`, etc.), for each **character column** in the original `myLCdata_dirty`. However, since our data frame from project one, `myLCdata,` only contains numerical values/attributes, we expect the counts to be zero or empty for the special character columns. We found out that the result will be a empty **tibble,** or in other words, an **empty data frame.**
 
-```{r cahr_specials}
+```{r char_specials}
 char_specials <- myLCdata_dirty %>%
   summarise(
     across(
@@ -176,7 +184,7 @@ Our next goals was to create a **tidy** data frame showing the **percentage** of
 
 for each **numeric column** in `myLCdata_dirty`.
 
-First, we can bind our two previously created data frames `num_speicals` and `outlier_specials` together. Again, as justified earlier, we do not have to do an analysis for characteristic values.
+First, we can bind our two previously created data frames `num_specials` and `outlier_specials` together. Again, as justified earlier, we do not have to do an analysis for characteristic values.
 
 ```{r bind_cols}
 # creating a new data frame that binds the data together
