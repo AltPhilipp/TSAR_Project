@@ -57,12 +57,9 @@ TSAR_ID <- 5
 # Please make sure to set WD to the same folder as .qmd file.
 data_path <- "Data/myLCdata.csv"
 rds_path <- "dirtyfy.rds"
-png_path <- "Data/Missing_Data_Profile.png"
 
 # Load data and dirtyfy function
-print(data_path)
 myLCdata <- fread(data_path)
-print(rds_path)
 dirtyfy_function <- readRDS(rds_path)
 myLCdata_dirty <- dirtyfy_function(myLCdata, TSAR_ID)
 
