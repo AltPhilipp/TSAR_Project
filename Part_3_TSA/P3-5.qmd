@@ -1,0 +1,174 @@
+---
+title: "P3-5"
+subtitle: "Times Series Forecasting"
+author: "Philipp Altenbach, Taoufik Brinis, Ronny Grieder, Ryan Kreis"
+date: today
+date-format: long
+format:
+  # html:
+  #   theme: zephyr
+  #   code-fold: true
+  #   page-layout: full
+  pdf:
+    code-overflow: wrap        # Prevent code overflow
+    number-sections: true      # Section Numbers
+    code-line-numbers: true    # Show line numbers in code
+    fig-width: 7               # Adjust figure width
+    fig-height: 5              # Adjust figure height
+    fig-pos: "H"               # Keep figures in place
+    fig-align: center          # Align figures at the center
+    tbl-cap-location: top      # Table captions at the top
+    tbl-colwidths: auto        # Allow tables to auto-adjust width
+    geometry: a4paper, margin=1.0in # A4 page with slightly reduced margins
+execute:
+  echo: true                   # Show code in output
+  warning: false               # Suppress warnings
+  message: false               # Suppress messages
+editor: visual
+---
+
+```{r setup, include=FALSE}
+
+# install required packages if needed
+if (!require("fpp3")) install.packages("fpp3")
+if (!require("data.table")) install.packages("data.table")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("DataExplorer")) install.packages("DataExplorer")
+if (!require("tidyr")) install.packages("tidyr")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("scales")) install.packages("scales")
+
+
+# loading required packages
+library(fpp3)
+
+```
+
+```{r Prelimiaries}
+# Loading our underlying timeseries using ID: CEU1021000001
+mySeries <- us_employment %>%
+  filter(Series_ID == "CEU1021000001")
+
+# Autoplot and first inspection of mySeries
+View(mySeries)
+autoplot(mySeries, Employed)
+
+# Checking for NA
+mySeries %>% filter(is.na(Employed)) %>% head()
+
+# Removing NA
+mySeries <- mySeries %>%
+  filter(!is.na(Employed))
+
+# Saving series on disk
+saveRDS(mySeries, file = "CEU1021000001_series.rds")
+
+```
+
+```{r extract training data}
+
+# Load the saved time series
+mySeries <- readRDS("CEU1021000001_series.rds")
+
+# multiplying by 0.8 to get training data
+n_total <- nrow(mySeries)
+n_train <- floor(0.8 * n_total)
+
+# storing train
+train <- mySeries %>% 
+  slice(1:n_train)
+```
+
+# (0.5 points) Train your 1st Benchmark Model
+
+```{r 1st bechnmark model}
+
+# Train seasonal naive model
+model_benchmark1 <- train %>%
+  model(
+    drift = RW(Employed ~ drift())
+  )
+
+print(model_benchmark1)
+
+# Inspect fitted values using augment()
+fitted_benchmark1 <- model_benchmark1 %>%
+  augment()
+
+```
+
+#  (2 points) Evaluate the Model Fit of Your 1st Benchmark Model
+
+## a. Create a time plot ’Actual vs. Fitted’:
+
+```{r actual-vs-fitted}
+# Plot actual vs. fitted values
+fitted_benchmark1 %>%
+  autoplot(Employed) +
+  autolayer(fitted_benchmark1, .fitted, color = "red", linetype = "dashed") +
+  labs(title = "Actual vs. Fitted Values – Drift Model",
+       y = "Employed",
+       x = "Date") +
+  theme_minimal()
+```
+
+**Are the fitted values close to the actual values?**
+
+-   Yes, the fitted values are close to the actual values.
+
+**Are they systematically too high or too low?**
+
+-   They do not seam to be systematically too high or too low
+
+**If yes, where does it come from? (Consider how your benchmark model works!)**
+
+-   Answer was no. The drift method seems to be a good fit.
+
+## b. Create a scatter plot ’Actual vs. Fitted’:
+
+```{r scatter plot Actual vs. Fitted}
+
+fitted_benchmark1 %>%
+  ggplot(aes(x = .fitted, y = Employed)) +
+  geom_point(alpha = 0.5, color = "darkblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = 2, color = "red") +
+  labs(title = "Actual vs. Fitted – Drift Model",
+       x = "Fitted Values",
+       y = "Actual Values") +
+  theme_minimal()
+
+```
+
+**Are the points close to the identity line?**
+
+-   Yes, the points generally cluster around the identity line, indicating a reasonably good overall fit.
+
+**Are they systematically too high or too low?**
+
+-   There are no strong systematic deviations, but some points diverge and form outliers
+
+**If yes, where does it come from? (Relate your answer to what you saw in the
+time plot.)**
+
+-   Outliers might occur because the drift model captures long-term trends but fails to adjust for short-term fluctuations.
+
+## c. Perform residual diagnostics to inspect the model fit:
+
+```{r residual diagnostics for 1st benchmark model}
+# Residual diagnostics for the drift model
+model_benchmark1 %>%
+  gg_tsresiduals()
+
+```
+
+**Are the residuals auto-correlated? How do you decide that based on the plots?**
+
+-   Yes, the residuals show signs of autocorrelation, as several spikes in the ACF plot exceed the significance bounds.
+
+**Do the residuals have zero mean? How do you decide that based on the plots?**
+
+-   Yes, the histogram of residuals is centered around zero, and the time plot of residuals fluctuates symmetrically around the zero line
+
+**What do these results tell you about your model?**
+
+-   The model captures the general trend but fails to fully account for short-term dependencies, indicating room for improvement beyond a drift-based benchmark.
