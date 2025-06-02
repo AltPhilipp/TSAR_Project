@@ -172,3 +172,25 @@ model_benchmark1 %>%
 **What do these results tell you about your model?**
 
 -   The model captures the general trend but fails to fully account for short-term dependencies, indicating room for improvement beyond a drift-based benchmark.
+
+## d. Double-check your results from (c).
+
+```{r ljung-box-and-residual-mean}
+# Ljung-Box test for residual autocorrelation
+# Ljung-Box test on residuals with lag = 24
+fitted_benchmark1 %>%
+  features(.resid, ljung_box, lag = 24, dof = 1)
+
+# Residual mean
+mean(fitted_benchmark1$.resid, na.rm = TRUE)
+
+
+```
+
+**Does the Ljung-Box test result support your conclusions from (c)?**
+
+-   Yes, the Ljung-Box test confirms significant autocorrelation in the residuals (p-value ≈ 7.98e-06), which supports the earlier observation from the ACF plot.
+
+**Does the residual mean result support your conclusions from (c)?**
+
+-   Yes, the residual mean is effectively zero (≈ –2.97e-14), confirming that the residuals are unbiased on average.
