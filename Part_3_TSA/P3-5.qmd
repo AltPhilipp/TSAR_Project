@@ -65,6 +65,8 @@ saveRDS(mySeries, file = "CEU1021000001_series.rds")
 
 ```
 
+# 1. (0.5 Points) Extract the Training Set
+
 ```{r extract training data}
 
 # Load the saved time series
@@ -79,7 +81,7 @@ train <- mySeries %>%
   slice(1:n_train)
 ```
 
-# (0.5 points) Train your 1st Benchmark Model
+# 2. (0.5 points) Train your 1st Benchmark Model
 
 ```{r 1st bechnmark model}
 
@@ -97,7 +99,7 @@ fitted_benchmark1 <- model_benchmark1 %>%
 
 ```
 
-#  (2 points) Evaluate the Model Fit of Your 1st Benchmark Model
+# 3. (2 points) Evaluate the Model Fit of Your 1st Benchmark Model
 
 ## a. Create a time plot ’Actual vs. Fitted’:
 
@@ -147,8 +149,7 @@ fitted_benchmark1 %>%
 
 -   There are no strong systematic deviations, but some points diverge and form outliers
 
-**If yes, where does it come from? (Relate your answer to what you saw in the
-time plot.)**
+**If yes, where does it come from? (Relate your answer to what you saw in the time plot.)**
 
 -   Outliers might occur because the drift model captures long-term trends but fails to adjust for short-term fluctuations.
 
@@ -171,7 +172,7 @@ model_benchmark1 %>%
 
 **What do these results tell you about your model?**
 
--   The model captures the general trend but fails to fully account for short-term dependencies, indicating room for improvement beyond a drift-based benchmark.
+-   The model captures the general trend but fails to fully account for short-term dependencies, indicating room for improvement beyond a drift-based benchmark. There might still be some information the model was not able to catch.
 
 ## d. Double-check your results from (c).
 
@@ -193,4 +194,62 @@ mean(fitted_benchmark1$.resid, na.rm = TRUE)
 
 **Does the residual mean result support your conclusions from (c)?**
 
--   Yes, the residual mean is effectively zero (≈ –2.97e-14), confirming that the residuals are unbiased on average.
+-   No, not really since the residual mean is effectively zero but not quite (≈ –2.97e-14), confirming that autocorrelation is present within the residuals.
+
+# 4. (1.5 points) Evaluate the Point Forecast Accuracy of your 1st Benchmark Model
+
+```{r forecast-drift}
+
+forecast_length <- n_total - n_train
+# Forecast for 149 months ahead
+fc_benchmark1 <- model_benchmark1 %>%
+  forecast(h = forecast_length)
+
+# Time plot of forecast vs actual
+fc_benchmark1 %>%
+  autoplot(mySeries) +
+  labs(title = "Forecast vs Actual – Drift Model",
+       y = "Employed",
+       x = "Date") +
+  theme_minimal()
+
+
+```
+
+```{r}
+# Calculate accuracy on full data
+fc_benchmark1 %>%
+  accuracy(mySeries)
+```
+
+## Interpretation of accuracy metrics
+
+The root mean squared error (RMSE) is approximately 105, which is substantial relative to the scale of the series and indicates notable deviations from actual values during the forecast period. This level of error suggests that while the model captures the general trend, it fails to account for finer structural shifts or turning points. The mean absolute percentage error (MAPE) of 9.3% indicates that the model's forecasts are off by about 9% on average, which is moderate for a benchmark model but clearly insufficient for precise forecasting in policy or economic analysis.
+
+# 5. (0.5 points) Evaluate the Point Forecast Uncertainty of Your 1st Benchmark Model
+
+```{r residual-diagnostics-uncertainty}
+# Residual diagnostics for evaluating forecast uncertainty
+model_benchmark1 %>%
+  gg_tsresiduals()
+
+```
+
+## Are the residuals homoscedastic? (That is, do they have constant variance?)
+
+-   No, the residuals are not entirely homoscedastic; a few sharp spikes around 1980 indicate temporary variance inflation.
+
+## Are the residuals normally distributed?
+
+-   Roughly yes, the histogram of residuals appears bell-shaped and centered around zero but it also shows some asymmetry and heavy tails
+
+```{r prediction-intervals}
+# Display prediction intervals (80% and 95%) for forecast
+fc_benchmark1 %>%
+  hilo()
+
+```
+
+## Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+
+-   No, it does not make sense to rely on these prediction intervals for model evaluation because the drift model has poor residual diagnostics (autocorrelation, heteroscedasticity), which undermines the reliability of the uncertainty estimates.
