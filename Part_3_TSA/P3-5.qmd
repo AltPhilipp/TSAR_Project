@@ -107,7 +107,7 @@ fitted_benchmark1 <- benchmark_model_1 %>%
 
 ## a. Creating a time plot "Actual vs. Fitted"
 
-```{r actual-vs-fitted}
+```{r time plot actual vs. fitted M1}
 # Time Plot "Actual vs. Fitted"
 af_1 <- fitted_benchmark1 %>%
   autoplot(Employed, color = "darkblue") +
@@ -137,7 +137,7 @@ ggplotly(af_1)
 
 ## b. Creating a scatter plot "Actual vs. Fitted":
 
-```{r scatter plot Actual vs. Fitted}
+```{r scatter plot actual vs. fitted M1}
 sp_1 <- fitted_benchmark1 %>%
   ggplot(aes(x = .fitted, y = Employed)) +
   geom_point(alpha = 0.5, color = "darkblue") +
@@ -148,7 +148,6 @@ sp_1 <- fitted_benchmark1 %>%
   theme_minimal()
 
 ggplotly(sp_1)
-
 ```
 
 **Are the points close to the identity line?**
@@ -186,7 +185,7 @@ benchmark_model_1 %>%
 
 ## d. Double-checking the results from (c).
 
-```{r ljung-box-and-residual-mean}
+```{r ljung-box-and-residual-mean M1}
 # Ljung-Box test for residual autocorrelation
 # Using lag = 24
 fitted_benchmark1 %>%
@@ -209,7 +208,7 @@ the absence of autocorrelation.
 
 # 4. Evaluating the Point Forecast Accuracy of the 1st Benchmark Model
 
-```{r forecast-drift}
+```{r forecast-drift M1}
 forecast_length <- n_total - n_train # Remainder from TS after training data extracted
 # Forecast for 149 months ahead
 fc_benchmark1 <- benchmark_model_1 %>%
@@ -224,7 +223,7 @@ fc_benchmark1 %>%
   theme_minimal()
 ```
 
-```{r}
+```{r accuracy M1}
 # Calculating accuracy on full data
 fc_benchmark1 %>%
   accuracy(mySeries)
@@ -232,40 +231,42 @@ fc_benchmark1 %>%
 
 ## Interpretation of accuracy metrics
 
-The root mean squared error (RMSE) of approximately 105 is scale-dependent and should be interpreted in the context of the time series. Based on the time plot, this error appears to be roughly in the range of seasonal fluctuations, which is acceptable for a benchmark model but too large for forecasting within-season employment changes. The mean absolute percentage error (MAPE) of 9.3% compares each forecast error to the level of the series and is appropriate here due to the presence of a strong trend and moderate cyclical behavior. However, while a 9% average error is reasonable for a simple benchmark, it remains inadequate for precise, policy-relevant forecasting.
+-   The root mean squared error (RMSE) of approximately 105 is scale-dependent and should be interpreted in the context of the time series. Based on the time plot, this error appears to be roughly in the range of seasonal fluctuations, which is acceptable for a benchmark model but too large for forecasting within-season employment changes.
+
+-   The mean absolute percentage error (MAPE) of 9.3% compares each forecast error to the level of the series and is appropriate here due to the presence of a strong trend and moderate cyclical behavior. However, while a 9% average error is reasonable for a simple benchmark, it remains inadequate for precise, policy-relevant forecasting.
 
 # 5. Evaluating the Point Forecast Uncertainty of the 1st Benchmark Model
 
-```{r residual-diagnostics-uncertainty}
+```{r residual-diagnostics-uncertainty M1}
 # Residual diagnostics for evaluating forecast uncertainty
 benchmark_model_1 %>%
   gg_tsresiduals()
 ```
 
-## Are the residuals homoscedastic? (That is, do they have constant variance?)
+**Are the residuals homoscedastic? (That is, do they have constant variance?)**
 
 -   No, the residuals are not entirely homoscedastic, since several sharp spikes 
 around 1980 indicate periods of temporary variance inflation.
 
-## Are the residuals normally distributed?
+**Are the residuals normally distributed?**
 
 -   Roughly yes, the histogram of residuals appears bell-shaped and centered 
 around zero, though there is some asymmetry and evidence of heavy tails in both directions.
 
-```{r prediction-intervals}
+```{r prediction-intervals M1}
 # Display prediction intervals (80% and 95%) for forecast
 fc_benchmark1 %>%
   hilo()
 ```
 
-## Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+**Does it make sense to include these prediction intervals in your model evaluation? Why/why not?**
 
 -   No, it does not make sense to include these prediction intervals in the model
 evaluation, since the presence of autocorrelation and heteroscedasticity in the 
 residuals undermines the reliability of the forecast uncertainty estimates.
 
 
-## Training 2nd Benchmark Model (Seasonal Naive Method)
+# 6. Training 2nd Benchmark Model (Seasonal Naive Method)
 ```{r 2nd benchmark model}
 # Train model on training data using seasonal naive method
 benchmark_model_2 <- train %>%
@@ -278,10 +279,10 @@ fitted_benchmark2 <- benchmark_model_2 %>%
   augment()
 ```
 
-# 3. Evaluating the Model Fit of the 1st Benchmark Model
+# 6.1 Evaluating the Model Fit of the 2nd Benchmark Model
 
 ## a. Creating a time plot "Actual vs. Fitted"
-```{r}
+```{r time plot actual vs. fitted M2}
 # Time Plot "Actual vs. Fitted"
 af_2 <- fitted_benchmark2 %>%
   autoplot(Employed, color = "darkblue") +
@@ -308,3 +309,152 @@ but there appears to be a systematic lag in the model's predictions.
 month in the previous year, which explains the consistent shift or lag in the predictions.
 
 ## b. Creating a scatter plot "Actual vs. Fitted":
+```{r scatter plot actual vs. fitted M2}
+sp_2 <- fitted_benchmark2 %>%
+  ggplot(aes(x = .fitted, y = Employed)) +
+  geom_point(alpha = 0.5, color = "darkblue") +
+  geom_abline(slope = 1, intercept = 0, linetype = 2, color = "red") +
+  labs(title = "Actual vs. Fitted (Seasonal Naive Model)",
+       x = "Fitted Values",
+       y = "Actual Values") +
+  theme_minimal()
+
+ggplotly(sp_2)
+```
+**Are the points close to the identity line?**
+
+-   The points remain reasonably close to the identity line for lower employment 
+values (up to around 700), but deviate substantially beyond that range, 
+which incicates a poor fit in higher-value regions.
+
+**Are they systematically too high or too low?**
+
+-   Yes, the fitted values appear systematically too high or too low in certain
+ranges, particularly as the actual values increase, which may suggest a mismatch in scale or timing.
+
+**If yes, where does it come from? (Relate your answer to what you saw in the time plot.)**
+
+-   This may result from the model reusing prior seasonal values that no longer 
+reflect current conditions, especially during rapid structural changes, which leads
+to substantial prediction errors when actual values shift sharply.
+
+## c. Performing residual diagnostics to inspect the model fit:
+```{r residual diagnostics for 2nd benchmark model}
+# Residual diagnostics for the seasonal naive model
+benchmark_model_2 %>%
+  gg_tsresiduals() # Will throw warnings because of NA rows.
+```
+**Are the residuals auto-correlated? How do you decide that based on the plots?**
+
+-   Yes, the residuals are clearly auto-correlated, since the ACF plot shows 
+multiple significant spikes well above the confidence bounds, especially at lower lags.
+
+**Do the residuals have zero mean? How do you decide that based on the plots?**
+
+-   The residuals are generally centered around zero, however, the histogram shows 
+heavy tails and frequent outliers in both directions, which suggests a non-normal
+distribution despite a near-zero mean.
+
+**What do these results tell you about your model?**
+
+-   The model fails to adequately capture the underlying structure of the data, 
+as indicated by persistent autocorrelation and non-normal residuals, 
+both of which undermine the reliability of its forecasts and prediction intervals.
+
+## d. Double-checking the results from (c).
+```{r ljung-box-and-residual-mean M2}
+# Ljung-Box test for residual autocorrelation
+# Using lag = 24
+fitted_benchmark2 %>%
+  features(.resid, ljung_box, lag = 24, dof = 1)
+
+# Residual mean (applied mean() to .resid column)
+mean(fitted_benchmark1$.resid, na.rm = TRUE)
+```
+**Does the Ljung-Box test result support your conclusions from (c)?**
+
+-   Yes, the Ljung-Box test result (p-value = 0) strongly supports our conclusion 
+that residuals are autocorrelated, which confirms that the model fails to capture key patterns in the data.
+
+**Does the residual mean result support your conclusions from (c)?**
+
+-   Yes, the residual mean is effectively zero (-2.97183e-14), which supports the conclusion 
+that the model is unbiased on average, even though it misses important temporal dependencies.
+
+# 6.2 Evaluating the Point Forecast Accuracy of the 2nd Benchmark Model
+
+```{r forecast-drift M2}
+forecast_length <- n_total - n_train # Remainder from TS after training data extracted
+# Forecast for 149 months ahead
+fc_benchmark2 <- benchmark_model_2 %>%
+  forecast(h = forecast_length)
+
+# Time plot of "Actual vs. Forecast"
+fc_benchmark2 %>%
+  autoplot(mySeries) +
+  labs(title = "Actual vs Forecast (Drift Model)",
+       y = "Employed",
+       x = "Date") +
+  theme_minimal()
+```
+```{r accuracy M2}
+# Calculating accuracy on full data
+fc_benchmark2 %>%
+  accuracy(mySeries)
+```
+## Interpretation of accuracy metrics
+
+# Check this!
+
+-   The root mean squared error (RMSE) of approximately 107.84 is substantial 
+relative to the scale of the series and reflects considerable deviation from 
+actual values, particularly during periods of structural change or trend.
+
+-   The mean absolute percentage error (MAPE) of 11.3% indicates that, on average,
+forecasts deviate by over 11% from actual values, which is relatively high and 
+suggests the model lacks the precision required for reliable policy or economic forecasting.
+
+# 6.3 Evaluating the Point Forecast Uncertainty of the 2nd Benchmark Model
+
+```{r residual-diagnostics-uncertainty M2}
+# Residual diagnostics for evaluating forecast uncertainty
+benchmark_model_2 %>%
+  gg_tsresiduals()
+```
+
+**Are the residuals homoscedastic? (That is, do they have constant variance?)**
+
+-   No, the residuals are not homoscedastic, since the time plot shows periods 
+of noticeably increased variance, particularly around structural shifts in the late 1970s and 1980s.
+
+**Are the residuals normally distributed?**
+
+-   Not entirely, the histogram is roughly bell-shaped and centered around zero, 
+but the presence of heavy tails and outliers suggests deviations from normality.
+
+```{r prediction-intervals M2}
+# Display prediction intervals (80% and 95%) for forecast
+fc_benchmark2 %>%
+  hilo()
+```
+
+## Does it make sense to include these prediction intervals in your model evaluation? Why/why not?
+
+# Check this!
+
+-   No, it does not make sense to rely on these prediction intervals for model 
+evaluation, as the residuals exhibit autocorrelation, non-homoscedasticity, 
+and non-normality, which violate key assumptions underlying the validity of the interval estimates.
+
+# 7. Comparison of Evaluation Results (1st and 2nd Model)
+
+# Check this!
+
+Between the two models, the drift model shows slightly better point forecast accuracy, 
+with lower RMSE and MAPE values compared to the seasonal naive model. 
+Although both models perform poorly in terms of residual diagnostics, 
+we are instructed to base our decision primarily on forecast accuracy. 
+The drift model yields a MAPE of 9.3%, while the seasonal naive model has a 
+higher MAPE of 11.3%, indicating less reliable forecasts on average. 
+Therefore, we choose *the drift model* as the better benchmark for this series, given its relatively lower forecast error.
+
