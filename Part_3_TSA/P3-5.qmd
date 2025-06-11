@@ -225,9 +225,9 @@ fc_benchmark1 %>%
 
 ## Interpretation of accuracy metrics
 
--   The root mean squared error (RMSE) of approximately 105 is scale-dependent and should be interpreted in the context of the time series. Based on the time plot, this error appears to be roughly in the range of seasonal fluctuations, which is acceptable for a benchmark model but too large for forecasting within-season employment changes.
+-   The root mean squared error (RMSE) of approximately **105** is scale-dependent and should be interpreted in the context of the time series. Based on the time plot, this error appears to be roughly in the range of seasonal fluctuations, which is acceptable for a benchmark model but too large for forecasting within-season employment changes.
 
--   The mean absolute percentage error (MAPE) of 9.3% compares each forecast error to the level of the series and is appropriate here due to the presence of a strong trend and moderate cyclical behavior. However, while a 9% average error is reasonable for a simple benchmark, it remains inadequate for precise, policy-relevant forecasting.
+-   The mean absolute percentage error (MAPE) of **10.81%** indicates that, on average, the forecast errors are about 10.81% of the actual employment levels. This is a moderately high value, implying the model lacks precision, particularly over periods with sharp employment changes. Given the trend and cyclical components visible in the time plot, this level of MAPE suggests the drift model is insufficiently responsive to turning points in the series.
 
 # 5. Evaluating the Point Forecast Uncertainty of the 1st Benchmark Model
 
