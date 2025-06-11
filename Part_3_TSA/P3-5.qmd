@@ -287,7 +287,7 @@ af_2 <- fitted_benchmark2 %>%
 ggplotly(af_2)
 ```
 
-**Are the fitted values close to the actual values?** - In some instances, especially when predictable cycles occur, the fitted values are somewhat close to the actual values, however, during fluctuations or unexpected c hanges, the model fails to predict accurately and is often relatively far off.
+**Are the fitted values close to the actual values?** - In some instances, especially when predictable cycles occur, the fitted values are somewhat close to the actual values, however, during fluctuations or unexpected changes, the model fails to predict accurately and is often relatively far off.
 
 **Are they systematically too high or too low?** - We were not able to identify a consistent directional bias (too high or too low), but there appears to be a systematic lag in the model's predictions.
 
@@ -385,8 +385,6 @@ fc_benchmark2 %>%
 
 ## Interpretation of accuracy metrics
 
-# Check this!
-
 -   The root mean squared error (RMSE) of approximately 107.84 is substantial relative to the scale of the series and reflects considerable deviation from actual values, particularly during periods of structural change or trend.
 
 -   The mean absolute percentage error (MAPE) of 11.3% indicates that, on average, forecasts deviate by over 11% from actual values, which is relatively high and suggests the model lacks the precision required for reliable policy or economic forecasting.
@@ -419,4 +417,4 @@ fc_benchmark2 %>%
 
 # 7. Comparison of Evaluation Results (1st and 2nd Model)
 
-Between the two models, the drift model shows slightly better point forecast accuracy, with lower RMSE and MAPE values compared to the seasonal naive model. Although both models perform poorly in terms of residual diagnostics, we are instructed to base our decision primarily on forecast accuracy. The drift model yields a MAPE of 9.3%, while the seasonal naive model has a higher MAPE of 11.3%, indicating less reliable forecasts on average. Therefore, we choose *the drift model* as the better benchmark for this series, given its relatively lower forecast error.
+Between the two models, the drift model shows slightly better point forecast accuracy, with lower RMSE and MAPE values compared to the seasonal naive model. Although both models perform poorly in terms of residual diagnostics, we are instructed to base our decision primarily on forecast accuracy. The drift model yields a MAPE of 10.8%, while the seasonal naive model has a higher MAPE of 11.3%, indicating less reliable forecasts on average. Therefore, we choose *the drift model* as the better benchmark for this series, given its relatively lower forecast error.
