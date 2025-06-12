@@ -225,7 +225,6 @@ The residual mean is effectively zero (-2.97183e-14), which confirms the model i
 #| fig-cap: "Point Forecast Accuracy 1st Model"
 
 forecast_length <- n_total - n_train
-# Forecast for 149 months ahead
 fc_benchmark1 <- benchmark_model_1 %>%
   forecast(h = forecast_length)
 
@@ -399,8 +398,7 @@ Yes, the residual mean of –1.60 supports the conclusion from 8.3, as it indica
 #| label: fig-pf2
 #| fig-cap: "Point Forecast Accuracy 2nd Model"
 
-forecast_length <- n_total - n_train # Remainder from TS after training data extracted
-# Forecast for 149 months ahead
+forecast_length <- n_total - n_train
 fc_benchmark2 <- benchmark_model_2 %>%
   forecast(h = forecast_length)
 
