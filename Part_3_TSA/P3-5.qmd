@@ -390,7 +390,7 @@ Yes, the Ljung-Box test result (p-value = 0) strongly supports our conclusion th
 
 **Does the residual mean result support your conclusions from 8.3?**
 
-Yes, the residual mean of –1.60 supports the conclusion from 8.3, as it indicates only a slight underestimation, which suggests that the model is approximately unbiased on average.
+Yes, the residual mean of approximately -1.60 supports the conclusion from 8.3, as it indicates only a slight underestimation, which suggests that the model is approximately unbiased on average.
 
 # Evaluating the Point Forecast Accuracy of the 2nd Benchmark Model
 
